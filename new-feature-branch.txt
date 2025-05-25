@@ -1,0 +1,7 @@
+git checkout dev                            # Make sure you're on the dev branch
+git pull origin dev                         # Fetch the latest changes on dev
+git checkout -b feature/<feature-name>      # Create a specific branch for the new feature
+
+git push -u origin feature/<feature-name>   # Push the changes to the feature branch
+
+Create a merge request to the dev branch
