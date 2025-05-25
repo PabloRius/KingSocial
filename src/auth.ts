@@ -6,12 +6,21 @@ import Google from "next-auth/providers/google";
 function CustomPrismaAdapter(p: typeof prisma) {
   return {
     ...PrismaAdapter(p),
-    createUser: ({ id, ...data }) => {
+    createUser: async ({ ...data }) => {
       const username =
         data.email?.split("@")[0] ||
         data.name?.replace(/\s+/g, "").toLowerCase() ||
         `user${Math.random().toString(36).slice(2, 8)}`;
-      return p.user.create({ data: { ...data, username: username } });
+      const user = await p.user.create({
+        data: { ...data, username: username },
+      });
+      return {
+        id: user.id,
+        email: user.email ?? "",
+        emailVerified: user.emailVerified ?? null,
+        name: user.name ?? "",
+        image: user.image ?? "",
+      };
     },
   };
 }
