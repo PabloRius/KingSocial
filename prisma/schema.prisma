@@ -14,6 +14,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+// Prisma auth adapter - start
 model User {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
@@ -70,3 +72,7 @@ model VerificationToken {
  
   @@unique([identifier, token])
 }
+
+// Prisma auth adapter - end
+
+// App specific schemas - start
