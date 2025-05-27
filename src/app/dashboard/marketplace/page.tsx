@@ -14,7 +14,7 @@ export default async function MarketplacePage() {
             Find, buy, sell, and trade with other students
           </p>
         </div>
-        <Button className="cursor-pointer bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
+        <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
           <ShoppingBag className="mr-2 h-4 w-4" />
           Sell Something
         </Button>

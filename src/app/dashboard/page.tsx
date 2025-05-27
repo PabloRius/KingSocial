@@ -22,7 +22,7 @@ export default async function DashboardPage() {
               {"What's your vibe today?"}
             </p>
           </div>
-          <Button className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
+          <Button className="bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
             <Zap className="h-4 w-4" />
             Create Post
           </Button>

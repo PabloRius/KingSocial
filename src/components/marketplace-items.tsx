@@ -199,7 +199,7 @@ export const MarketPlaceItems = ({
         </h2>
         <Button
           variant="link"
-          className="text-pink-500 flex items-center gap-1"
+          className="text-celestial-blue-500 flex items-center gap-1"
         >
           See All <ArrowRight className="h-4 w-4" />
         </Button>
@@ -247,8 +247,8 @@ export const MarketPlaceItems = ({
           </div>
         ) : (
           <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-            <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-              <Search className="h-8 w-8 text-pink-500" />
+            <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-celestial-blue-100 dark:bg-celestial-blue-900/30 flex items-center justify-center">
+              <Search className="h-8 w-8 text-celestial-blue-500" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No items found</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
@@ -290,7 +290,7 @@ export const MarketPlaceItems = ({
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full w-8 h-8 bg-pink-500 text-white border-pink-500"
+              className="rounded-full w-8 h-8 bg-celestial-blue-500 text-white border-celestial-blue-500"
             >
               1
             </Button>

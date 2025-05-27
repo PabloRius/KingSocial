@@ -3,6 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* Custom blue palette */
+  --color-celestial-blue: 198 90% 45%;
+  --color-celestial-blue-50: #f0f9ff;
+  --color-celestial-blue-100: #e0f2fe;
+  --color-celestial-blue-200: #bae6fd;
+  --color-celestial-blue-500: #0b9ad8;
+  --color-celestial-blue-600: #0284c7;
+  --color-celestial-blue-900: #0c4a6e;
+  --color-air-force-blue: 202 22% 52%;
+  --color-alice-blue: 204 64% 90%;
+  --color-celestial-blue-2: 198 95% 43%;
+  --color-picton-blue: 200 72% 52%;
+  --color-picton-blue-500: #2ba2dc;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -147,4 +163,8 @@
 
 .animate-blob {
   animation: blob 7s infinite;
+}
+
+button {
+  cursor: pointer;
 }
