@@ -15,11 +15,11 @@ export const Header = async () => {
       >
         <Link href="/" className="flex justify-center">
           <div className="relative flex items-center">
-            <span className="text-3xl py-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 mr-2">
+            <span className="text-3xl py-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 mr-2">
               King
             </span>
             <span className="text-3xl font-bold">Social</span>
-            <div className="absolute -bottom-0 left-0 w-full h-3 bg-gradient-to-r from-pink-500 to-violet-500 opacity-30 rounded-full blur-sm"></div>
+            <div className="absolute -bottom-0 left-0 w-full h-3 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 opacity-30 rounded-full blur-sm"></div>
           </div>
         </Link>
       </div>
