@@ -77,7 +77,7 @@ export const MarketplaceClient = () => {
           <Input
             type="text"
             placeholder="Search for textbooks, electronics, dorm stuff..."
-            className="pl-10 rounded-xl border-gray-300 dark:border-gray-700 focus:border-pink-500 focus:ring-pink-500"
+            className="pl-10 rounded-xl border-gray-300 dark:border-gray-700 focus:border-celestial-blue-500 focus:ring-celestial-blue-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -98,13 +98,13 @@ export const MarketplaceClient = () => {
                   onClick={() => setSelectedCategory(category)}
                   className={
                     selectedCategory === category
-                      ? "bg-pink-50 dark:bg-gray-700 font-medium"
+                      ? "bg-celestial-blue-50 dark:bg-gray-700 font-medium"
                       : ""
                   }
                 >
                   {category}
                   {selectedCategory === category && (
-                    <Check className="ml-auto h-4 w-4 text-pink-500" />
+                    <Check className="ml-auto h-4 w-4 text-celestial-blue-500" />
                   )}
                 </DropdownMenuItem>
               ))}
@@ -170,7 +170,7 @@ export const MarketplaceClient = () => {
                               }
                               className={
                                 condition === cond
-                                  ? "bg-pink-500 hover:bg-pink-600"
+                                  ? "bg-celestial-blue-500 hover:bg-celestial-blue-600"
                                   : ""
                               }
                               onClick={() => setCondition(cond)}
@@ -203,7 +203,7 @@ export const MarketplaceClient = () => {
                   </Tabs>
                 </div>
                 <DrawerFooter>
-                  <Button className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600">
+                  <Button className="bg-gradient-to-r from-celestial-blue-500 to-violet-500 hover:from-celestial-blue-600 hover:to-violet-600">
                     Apply Filters
                   </Button>
                   <DrawerClose asChild>

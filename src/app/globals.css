@@ -6,6 +6,8 @@
 @theme {
   /* Custom blue palette */
   --color-celestial-blue: 198 90% 45%;
+  --color-celestial-blue-50: #f0f9ff;
+  --color-celestial-blue-100: #e0f2fe;
   --color-celestial-blue-200: #bae6fd;
   --color-celestial-blue-500: #0b9ad8;
   --color-celestial-blue-600: #0284c7;
@@ -161,4 +163,8 @@
 
 .animate-blob {
   animation: blob 7s infinite;
+}
+
+button {
+  cursor: pointer;
 }
