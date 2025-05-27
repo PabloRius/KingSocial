@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 export const SignInWithGoogleButton = () => {
   return (
     <Button
-      className="w-full h-12 text-base rounded-xl cursor-pointer bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
+      className="w-full h-12 text-base rounded-xl cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
       onClick={() => {
         login();
       }}
