@@ -1,9 +1,9 @@
 import { auth } from "@/auth";
 import { GetProfile } from "@/lib/actions/profile";
 import prisma from "@/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -21,9 +21,12 @@ export async function POST() {
 
     const { id } = profile;
 
+    const { plan } = await req.json();
+
     await prisma.sellerProfile.create({
       data: {
         user: { connect: { id } },
+        plan: plan || "basic",
       },
     });
     return NextResponse.json({ status: 201 });
