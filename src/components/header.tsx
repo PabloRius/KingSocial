@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeaderExpanded } from "./header-expanded";
 
 export const Header = () => {
-  const { session, loading } = useSession();
+  const { session } = useSession();
   return (
     <header className="relative border-b flex flex-row justify-between items-center py-6">
       <div
