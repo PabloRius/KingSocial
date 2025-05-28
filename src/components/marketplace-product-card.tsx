@@ -1,7 +1,8 @@
 import { Product } from "@/types/types";
-import { Heart, Star } from "lucide-react";
+import { Heart } from "lucide-react";
+// import { Heart, Star } from "lucide-react";
 import Image from "next/image";
-import { GoogleAvatar } from "./google-avatar";
+// import { GoogleAvatar } from "./google-avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter } from "./ui/card";
@@ -57,7 +58,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
             </>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-3">
+        {/* <div className="flex items-center gap-2 mt-3">
           <GoogleAvatar src="Place" name={item.seller.name || undefined} />
           <span className="text-sm">{item.seller.name}</span>
           <div className="flex items-center ml-auto">
@@ -66,7 +67,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
               {item.seller.sellerProfile.rating}
             </span>
           </div>
-        </div>
+        </div> */}
       </CardContent>
       <CardFooter className="p-0">
         <Button className="w-full rounded-none bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white">

@@ -1,14 +1,14 @@
-"use server";
-import { auth } from "@/auth";
+"use client";
+import { useSession } from "@/context/session-context";
 import { Bell, MessageSquare } from "lucide-react";
 import { DropdownMenu } from "./dropdown-menu";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
-export const HeaderExpanded = async () => {
-  const session = await auth();
-  if (!session?.user) return;
-  const { image, name, email } = session?.user;
+export const HeaderExpanded = () => {
+  const { session } = useSession();
+  if (!session?.profile) return;
+  const { name, email } = session?.profile;
   return (
     <div className="flex items-center gap-3">
       <Button
@@ -34,11 +34,7 @@ export const HeaderExpanded = async () => {
         <span className="sr-only">Messages</span>
       </Button>
       <div className="relative group">
-        <DropdownMenu
-          name={name || undefined}
-          image={image || undefined}
-          email={email || undefined}
-        />
+        <DropdownMenu name={name || undefined} email={email || undefined} />
       </div>
     </div>
   );

@@ -8,11 +8,9 @@ import { GoogleAvatar } from "./google-avatar";
 export const DropdownMenu = ({
   name,
   email,
-  image,
 }: {
   name: string | undefined;
   email: string | undefined;
-  image: string | undefined;
 }) => {
   const [dropdown, setDropdown] = useState(false);
 
@@ -24,7 +22,7 @@ export const DropdownMenu = ({
         }}
         className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-1 transition-all"
       >
-        <GoogleAvatar src={image} name={name} />
+        <GoogleAvatar name={name} />
       </button>
       <div
         className={`absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-10 transform origin-top-right transition-all ${

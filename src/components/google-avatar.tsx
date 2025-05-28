@@ -2,13 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-export const GoogleAvatar = ({
-  src,
-  name,
-}: {
-  src: string | undefined;
-  name: string | undefined;
-}) => {
+export const GoogleAvatar = ({ name }: { name: string | undefined }) => {
   const getInitials = () => {
     if (!name) return "NA";
 
@@ -24,7 +18,7 @@ export const GoogleAvatar = ({
   };
   return (
     <Avatar className="h-8 w-8 border-2 border-white dark:border-gray-800 group-hover:border-celestial-blue-200 dark:group-hover:border-celestial-blue-900 transition-all">
-      <AvatarImage src={src} alt="User" />
+      <AvatarImage src={undefined} alt={name} />
       <AvatarFallback className="bg-gradient-to-br from-celestial-blue-400 to-picton-blue-500 text-white">
         {getInitials()}
       </AvatarFallback>
