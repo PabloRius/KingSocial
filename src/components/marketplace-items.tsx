@@ -16,11 +16,7 @@ const featuredItems: Product[] = [
     price: 1200,
     condition: "Like New",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Jamie",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.8 },
-    },
+
     location: "Campus Center",
     featured: true,
     saved: false,
@@ -33,11 +29,7 @@ const featuredItems: Product[] = [
     price: 85,
     condition: "Good",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Taylor",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.6 },
-    },
+
     location: "Science Building",
     featured: true,
     saved: true,
@@ -50,11 +42,7 @@ const featuredItems: Product[] = [
     price: 120,
     condition: "New",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Morgan",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.9 },
-    },
+
     location: "North Dorms",
     featured: true,
     saved: false,
@@ -67,11 +55,7 @@ const featuredItems: Product[] = [
     price: 150,
     condition: "New",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Alex",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.7 },
-    },
+
     location: "Student Union",
     featured: true,
     saved: false,
@@ -88,11 +72,7 @@ const marketplaceItems: Product[] = [
     price: 60,
     condition: "Good",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Jordan",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.5 },
-    },
+
     location: "Math Building",
     featured: false,
     saved: false,
@@ -105,11 +85,7 @@ const marketplaceItems: Product[] = [
     price: 35,
     condition: "Like New",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Casey",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.3 },
-    },
+
     location: "East Dorms",
     featured: false,
     saved: true,
@@ -122,11 +98,7 @@ const marketplaceItems: Product[] = [
     price: 120,
     condition: "Like New",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Riley",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.9 },
-    },
+
     location: "Library",
     featured: false,
     saved: false,
@@ -139,11 +111,7 @@ const marketplaceItems: Product[] = [
     price: 45,
     condition: "Good",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Quinn",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.7 },
-    },
+
     location: "Student Center",
     featured: false,
     saved: false,
@@ -156,11 +124,7 @@ const marketplaceItems: Product[] = [
     price: 210,
     condition: "Good",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Avery",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.6 },
-    },
+
     location: "Bike Racks",
     featured: false,
     saved: false,
@@ -173,11 +137,7 @@ const marketplaceItems: Product[] = [
     price: 25,
     condition: "N/A",
     image: "/placeholder.svg?height=300&width=300",
-    seller: {
-      name: "Sam",
-      image: "/placeholder.svg?height=40&width=40",
-      sellerProfile: { rating: 4.8 },
-    },
+
     featured: false,
     saved: false,
     category: "Books",
