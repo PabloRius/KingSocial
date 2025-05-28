@@ -15,7 +15,6 @@ export type Product = {
   price: number;
   condition: Condition;
   location?: string;
-  seller: User;
   saved: boolean;
   featured: boolean;
   image?: string;
