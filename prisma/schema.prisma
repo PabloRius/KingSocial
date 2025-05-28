@@ -84,6 +84,7 @@ model SellerProfile {
   userId    String    @unique @db.ObjectId
   rating    Int?
   products  Product[]
+  plan      String    @default("basic")
 }
 
 model Product {
