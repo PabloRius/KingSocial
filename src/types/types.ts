@@ -1,9 +1,13 @@
-import { DefaultSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 
-export type CustomUser = {
-  username: string;
-  sellerProfile: { rating: number };
-} & DefaultSession["user"];
+export const userSelect = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  name: true,
+  email: true,
+  username: true,
+});
+
+export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
 
 export type Product = {
   id: number;
@@ -11,7 +15,7 @@ export type Product = {
   price: number;
   condition: Condition;
   location?: string;
-  seller: Pick<CustomUser, "name" | "image" | "sellerProfile">;
+  seller: User;
   saved: boolean;
   featured: boolean;
   image?: string;

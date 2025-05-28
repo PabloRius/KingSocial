@@ -1,11 +1,18 @@
-"use server";
-import { auth } from "@/auth";
+"use client";
+
 import { SignInWithGoogleButton } from "@/components/sign-in-with-google-button";
+import { useSession } from "@/context/session-context";
+import { Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
-  const session = await auth();
-  if (session?.user) {
+export default function Home() {
+  const { session, loading } = useSession();
+
+  if (loading) {
+    return <Loader2 className="flex-1 mx-auto animate-spin" />;
+  }
+
+  if (session?.profile) {
     redirect("/dashboard");
   }
   return (

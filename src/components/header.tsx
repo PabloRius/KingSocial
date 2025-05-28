@@ -1,16 +1,15 @@
-"use server";
-import { auth } from "@/auth";
+"use client";
+import { useSession } from "@/context/session-context";
 import Link from "next/link";
 import { HeaderExpanded } from "./header-expanded";
-import { ProtectedRoute } from "./protected-route";
 
-export const Header = async () => {
-  const session = await auth();
+export const Header = () => {
+  const { session, loading } = useSession();
   return (
     <header className="relative border-b flex flex-row justify-between items-center py-6">
       <div
         className={`relative ${
-          !session?.user ? "left-[50%] translate-x-[-50%]" : "left-6"
+          !session?.profile ? "left-[50%] translate-x-[-50%]" : "left-6"
         } transition-all flex justify-center hover:scale-110`}
       >
         <Link href="/" className="flex justify-center">
@@ -23,16 +22,14 @@ export const Header = async () => {
           </div>
         </Link>
       </div>
-      {session?.user && (
-        <ProtectedRoute>
-          <div
-            className={`relative ${
-              !session?.user ? "-right-[100%]" : "right-6"
-            }`}
-          >
-            <HeaderExpanded />
-          </div>
-        </ProtectedRoute>
+      {session?.profile && (
+        <div
+          className={`relative ${
+            !session?.profile ? "-right-[100%]" : "right-6"
+          }`}
+        >
+          <HeaderExpanded />
+        </div>
       )}
     </header>
   );

@@ -1,12 +1,14 @@
 "use client";
-import { logout } from "@/lib/actions/auth";
+
+import { useSession } from "@/context/session-context";
 
 export const SignOutButton = () => {
+  const {
+    handlers: { logout },
+  } = useSession();
   return (
     <button
-      onClick={() => {
-        logout();
-      }}
+      onClick={logout}
       className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700"
     >
       <div className="w-4 h-4">
