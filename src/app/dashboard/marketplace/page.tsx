@@ -23,7 +23,7 @@ export default function MarketplacePage() {
         <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
           <ShoppingBag className="mr-2 h-4 w-4" />
           {sellerProfile ? (
-            "Sell Something"
+            <Link href="marketplace/sell">Sell Something</Link>
           ) : (
             <Link href="marketplace/select-plan">Start Selling</Link>
           )}
