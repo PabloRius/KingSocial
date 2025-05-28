@@ -10,6 +10,7 @@ export default function MarketplacePage() {
   const { session } = useSession();
   const { profile } = session!;
   const { sellerProfile } = profile;
+  console.log(profile);
   return (
     <main className="flex-1 p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -24,7 +25,7 @@ export default function MarketplacePage() {
           {sellerProfile ? (
             "Sell Something"
           ) : (
-            <Link href="select-plan">Start Selling</Link>
+            <Link href="marketplace/select-plan">Start Selling</Link>
           )}
         </Button>
       </div>

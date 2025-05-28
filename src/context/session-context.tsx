@@ -18,6 +18,7 @@ type Session = {
 type SessionHandlers = {
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  reload: () => Promise<void>;
 };
 
 type SessionState = {
@@ -81,6 +82,7 @@ export const SessionProvider = ({
   const sessionHandlers: SessionHandlers = {
     login: loginHandler,
     logout: logoutHandler,
+    reload: fetchSession,
   };
 
   return (
