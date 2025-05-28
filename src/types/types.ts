@@ -5,9 +5,22 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
   name: true,
   email: true,
   username: true,
+  sellerProfile: true,
 });
 
 export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
+
+export const sellerProfileSelect =
+  Prisma.validator<Prisma.SellerProfileSelect>()({
+    id: true,
+    products: true,
+    rating: true,
+    user: true,
+  });
+
+export type SellerProfile = Prisma.SellerProfileGetPayload<{
+  select: typeof sellerProfileSelect;
+}>;
 
 export type Product = {
   id: number;
