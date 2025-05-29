@@ -22,36 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { categories, labelledConditions } from "@/types/types";
 import { Camera, Eye, Plus, PoundSterling, Tag, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
-const categories = [
-  "Electronics",
-  "Books",
-  "Clothing",
-  "Home & Dorm",
-  "Sports & Recreation",
-  "Tickets & Events",
-  "Art & Crafts",
-  "Other",
-];
-
-const conditions = [
-  { value: "new", label: "New", description: "Brand new, never used" },
-  {
-    value: "like-new",
-    label: "Like New",
-    description: "Barely used, excellent condition",
-  },
-  { value: "good", label: "Good", description: "Used but well maintained" },
-  {
-    value: "fair",
-    label: "Fair",
-    description: "Shows wear but fully functional",
-  },
-  { value: "poor", label: "Poor", description: "Heavy wear, may need repairs" },
-];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function SellPage() {
   const [formData, setFormData] = useState({
@@ -64,6 +40,7 @@ export default function SellPage() {
     tags: [] as string[],
   });
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [currentTag, setCurrentTag] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,17 +51,27 @@ export default function SellPage() {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      // In a real app, you'd upload to a service like Cloudinary or AWS S3
-      // For demo purposes, we'll use placeholder URLs
-      const newImages = Array.from(files).map(
-        (_, index) =>
-          `/placeholder.svg?height=300&width=300&text=Image${
-            images.length + index + 1
-          }`
-      );
-      setImages((prev) => [...prev, ...newImages].slice(0, 10)); // Max 10 images
+    if (!files) return;
+
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File ${file.name} exceeds the 5MB size limit.`);
+        continue;
+      }
+
+      validFiles.push(file);
     }
+
+    if (images.length + validFiles.length > 5) {
+      alert("You can upload a maximum of 5 images per product.");
+      return;
+    }
+
+    const filePreviews = validFiles.map((file) => URL.createObjectURL(file));
+    setImageFiles((prev) => [...prev, ...validFiles]);
+    setImages((prev) => [...prev, ...filePreviews]);
   };
 
   const removeImage = (index: number) => {
@@ -116,11 +103,35 @@ export default function SellPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const data = new FormData();
+    data.append("title", formData.title);
+    data.append("description", formData.description);
+    data.append("price", formData.price);
+    data.append("category", formData.category);
+    data.append("condition", formData.condition);
+    data.append("location", formData.location);
+    formData.tags.forEach((tag) => data.append("tags", tag));
 
-    // Redirect to marketplace with success message
-    window.location.href = "/marketplace?listed=success";
+    imageFiles.forEach((file) => data.append("images", file));
+
+    try {
+      const res = await fetch("/api/sell", {
+        method: "POST",
+        body: data,
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(`Error: ${error.message}`);
+        return;
+      }
+
+      window.location.href = "/dashboard/marketplace";
+    } catch {
+      alert("Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isFormValid = () => {
@@ -186,10 +197,7 @@ export default function SellPage() {
 
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="rounded-full">
-                      {
-                        conditions.find((c) => c.value === formData.condition)
-                          ?.label
-                      }
+                      {formData.condition}
                     </Badge>
                     <span className="text-gray-500">•</span>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -286,7 +294,7 @@ export default function SellPage() {
                   Photos
                 </CardTitle>
                 <CardDescription>
-                  Add up to 10 photos of your item. The first photo will be the
+                  Add up to 5 photos of your item. The first photo will be the
                   main image.
                 </CardDescription>
               </CardHeader>
@@ -432,10 +440,10 @@ export default function SellPage() {
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>
                       <SelectContent>
-                        {conditions.map((condition) => (
+                        {labelledConditions.map((condition) => (
                           <SelectItem
-                            key={condition.value}
-                            value={condition.value}
+                            key={condition.label}
+                            value={condition.label}
                           >
                             <div>
                               <div className="font-medium">

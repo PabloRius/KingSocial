@@ -1,5 +1,5 @@
 import { Product } from "@/types/types";
-import { Heart } from "lucide-react";
+// import { Heart } from "lucide-react";
 // import { Heart, Star } from "lucide-react";
 import Image from "next/image";
 // import { GoogleAvatar } from "./google-avatar";
@@ -14,7 +14,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
       className="group overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all"
     >
       <div className="relative">
-        <div className="absolute top-2 right-2 z-10">
+        {/* <div className="absolute top-2 right-2 z-10">
           <Button
             variant="ghost"
             size="icon"
@@ -25,17 +25,16 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           >
             <Heart className={`h-5 w-5 ${item.saved ? "fill-pink-500" : ""}`} />
           </Button>
-        </div>
-        {item.featured && (
+        </div> */}
+        {/* {item.featured && (
           <Badge className="absolute top-2 left-2 z-10 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-none">
             Featured
           </Badge>
-        )}
+        )} */}
         <div className="aspect-square overflow-hidden">
           <Image
-            src={"/Placeholder-product.jpg"}
-            // src={item.image || "/Placeholder-product.jpg"}
-            alt={item.title}
+            src={item.photos[0] || "/Placeholder-product.jpg"}
+            alt={item.name}
             width={300}
             height={300}
             className="object-scale-down w-full h-full group-hover:scale-105 transition-transform duration-300"
@@ -44,17 +43,17 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
       </div>
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg line-clamp-1">{item.title}</h3>
+          <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
           <p className="font-bold text-lg">£{item.price}</p>
         </div>
         <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
           <Badge variant="outline" className="rounded-full font-normal text-xs">
             {item.condition}
           </Badge>
-          {item.location && (
+          {item.pickupLocation && (
             <>
               <span className="mx-1">•</span>
-              <span>{item.location}</span>
+              <span>{item.pickupLocation}</span>
             </>
           )}
         </div>
