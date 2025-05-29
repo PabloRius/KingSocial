@@ -1,11 +1,7 @@
 "use client";
 
 import { DashboardCards } from "@/components/dashboard-cards";
-import { DashboardFeatured } from "@/components/dashboard-featured";
-import { Button } from "@/components/ui/button";
 import { useSession } from "@/context/session-context";
-
-import { Zap } from "lucide-react";
 
 export default function DashboardPage() {
   const { session } = useSession();
@@ -20,14 +16,9 @@ export default function DashboardPage() {
             {"What's your vibe today?"}
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
-          <Zap className="h-4 w-4" />
-          Create Post
-        </Button>
       </div>
 
       <DashboardCards />
-      <DashboardFeatured />
     </main>
   );
 }
