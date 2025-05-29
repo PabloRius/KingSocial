@@ -25,7 +25,7 @@ export type SellerProfile = Prisma.SellerProfileGetPayload<{
 export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   id: true,
   name: true,
-  seller: true,
+  seller: { select: { user: true, rating: true } },
   category: true,
   condition: true,
   description: true,

@@ -45,7 +45,6 @@ export default function MarketplacePage() {
     useState<Category>("All Categories");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 3000]);
   const [condition, setCondition] = useState<Condition>("Any");
-  // const [items, setItems] = useState(marketplaceItems)
 
   const emptyQuery = () => {
     setSearchQuery("");
@@ -64,12 +63,15 @@ export default function MarketplacePage() {
           </p>
         </div>
         <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
-          <ShoppingBag className="mr-2 h-4 w-4" />
-          {sellerProfile ? (
-            <Link href="marketplace/sell">Sell Something</Link>
-          ) : (
-            <Link href="marketplace/select-plan">Start Selling</Link>
-          )}
+          <Link
+            href={
+              sellerProfile ? "marketplace/sell" : "marketplace/select-plan"
+            }
+            className="flex flex-row items-center"
+          >
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            {sellerProfile ? "Sell Something" : "Start Selling"}
+          </Link>
         </Button>
       </div>
 
@@ -289,21 +291,15 @@ export default function MarketplacePage() {
             </Button>
           </div>
         )}
-
-        {!searchQuery &&
-          selectedCategory === "All Categories" &&
-          condition === "Any" &&
-          priceRange[0] === 0 &&
-          priceRange[1] === 3000 && (
-            <MarketPlaceItems
-              condition={condition}
-              priceRange={priceRange}
-              searchQuery={searchQuery}
-              selectedCategory={selectedCategory}
-              emptyQuery={emptyQuery}
-            />
-          )}
       </div>
+
+      <MarketPlaceItems
+        condition={condition}
+        priceRange={priceRange}
+        searchQuery={searchQuery}
+        selectedCategory={selectedCategory}
+        emptyQuery={emptyQuery}
+      />
     </main>
   );
 }

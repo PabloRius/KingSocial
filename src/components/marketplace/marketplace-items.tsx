@@ -1,7 +1,7 @@
+import { useDebounce } from "@/hooks/useDebounce";
 import { Category, Condition, Product } from "@/types/types";
 import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { MarketPlaceProductCard } from "../marketplace-product-card";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { MarketPlaceProductCard } from "./marketplace-product-card";
 
 interface MarketPlaceItemsProps {
   searchQuery: string;
@@ -26,32 +27,38 @@ export const MarketPlaceItems = ({
   emptyQuery,
 }: MarketPlaceItemsProps) => {
   const [items, setItems] = useState<Product[]>([]);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 12;
 
-  const fetchItems = useCallback(
-    async function fetchItems() {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (searchQuery) params.append("search", searchQuery);
-        if (selectedCategory) params.append("category", selectedCategory);
-        if (condition) params.append("condition", condition);
-        if (priceRange[0] !== undefined)
-          params.append("minPrice", priceRange[0].toString());
-        if (priceRange[1] !== undefined)
-          params.append("maxPrice", priceRange[1].toString());
-        const res = await fetch(`/api/marketplace?${params.toString()}`);
-        if (!res.ok) throw new Error("Failed to fetch products");
-        const data = await res.json();
-        setItems(data);
-      } catch (err) {
-        console.error("Error fetching items", err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [condition, priceRange, searchQuery, selectedCategory]
-  );
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (condition) params.append("condition", condition);
+      if (priceRange[0] !== undefined)
+        params.append("minPrice", priceRange[0].toString());
+      if (priceRange[1] !== undefined)
+        params.append("maxPrice", priceRange[1].toString());
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+
+      const res = await fetch(`/api/marketplace?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch products");
+
+      const data = await res.json();
+      setItems(data.products);
+      setTotalCount(data.totalCount);
+    } catch (err) {
+      console.error("Error fetching items", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [condition, priceRange, debouncedSearchQuery, selectedCategory, page]);
 
   useEffect(() => {
     fetchItems();
@@ -114,62 +121,39 @@ export const MarketPlaceItems = ({
               variant="outline"
               size="icon"
               className="rounded-full w-8 h-8"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              &lt;
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full w-8 h-8 bg-celestial-blue-500 text-white border-celestial-blue-500"
-            >
-              1
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full w-8 h-8"
-            >
-              2
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full w-8 h-8"
-            >
-              3
-            </Button>
+
+            {[...Array(Math.ceil(totalCount / limit)).keys()].map((_, i) => {
+              const pageNumber = i + 1;
+              return (
+                <Button
+                  key={pageNumber}
+                  variant="outline"
+                  size="sm"
+                  className={`rounded-full w-8 h-8 ${
+                    page === pageNumber
+                      ? "bg-celestial-blue-500 text-white border-celestial-blue-500"
+                      : ""
+                  }`}
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              );
+            })}
+
             <Button
               variant="outline"
               size="icon"
               className="rounded-full w-8 h-8"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= Math.ceil(totalCount / limit)}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              &gt;
             </Button>
           </div>
         </div>
