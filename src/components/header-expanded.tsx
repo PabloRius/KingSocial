@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 export const HeaderExpanded = () => {
   const { session } = useSession();
   if (!session?.profile) return;
-  const { name, email } = session?.profile;
+  const { name, email, sellerProfile } = session.profile;
   return (
     <div className="flex items-center gap-3">
       <Button
@@ -22,17 +22,19 @@ export const HeaderExpanded = () => {
         </Badge>
         <span className="sr-only">Notifications</span>
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-all cursor-pointer"
-      >
-        <MessageSquare className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-        <Badge className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center bg-celestial-blue-500">
-          5
-        </Badge>
-        <span className="sr-only">Messages</span>
-      </Button>
+      {sellerProfile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-all cursor-pointer"
+        >
+          <MessageSquare className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+          <Badge className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center bg-celestial-blue-500">
+            5
+          </Badge>
+          <span className="sr-only">Messages</span>
+        </Button>
+      )}
       <div className="relative group">
         <DropdownMenu name={name || undefined} email={email || undefined} />
       </div>

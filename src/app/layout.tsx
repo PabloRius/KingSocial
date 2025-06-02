@@ -1,3 +1,4 @@
+import { FloatingBackButton } from "@/components/floating-back-button";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SessionProvider } from "@/context/session-context";
@@ -37,6 +38,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </SessionProvider>
+        <FloatingBackButton />
       </body>
       <Analytics />
     </html>

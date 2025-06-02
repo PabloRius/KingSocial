@@ -9,13 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowRight, ShoppingBag, Users, UserSearch } from "lucide-react";
+import { ArrowRight, ShoppingBag, UserSearch } from "lucide-react";
 import Link from "next/link";
 
 export const DashboardCards = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {/* Buy-Selling Card */}
+      {/* Marketplace */}
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
@@ -40,52 +40,25 @@ export const DashboardCards = () => {
         </CardFooter>
       </Card>
 
-      {/* People Finder Card */}
+      {/* Events */}
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
             <UserSearch className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle>People Finder</CardTitle>
+          <CardTitle>Event Finder</CardTitle>
           <CardDescription>Connect with friends and colleagues</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm">
-            Search for people by name, location, or interests. Expand your
-            network and make new friends.
+            Search events by name, location, or interests. Expand your network
+            and make new friends.
           </p>
         </CardContent>
         <CardFooter>
           <Button variant="ghost" className="w-full justify-between" asChild>
-            <Link href="/people">
-              Find People
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </CardFooter>
-      </Card>
-
-      {/* Groups Card */}
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-2">
-          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-            <Users className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle>Groups</CardTitle>
-          <CardDescription>
-            Join communities with shared interests
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm">
-            Discover groups based on hobbies, campus, or intersets. Create your
-            own group and invite others.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button variant="ghost" className="w-full justify-between" asChild>
-            <Link href="/groups">
-              Explore Groups
+            <Link href="/events">
+              Find Events
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
