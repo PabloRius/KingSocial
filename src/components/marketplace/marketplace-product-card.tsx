@@ -1,12 +1,13 @@
 import { Product } from "@/types/types";
 // import { Heart } from "lucide-react";
 // import { Heart, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 // import { GoogleAvatar } from "./google-avatar";
 import { Star } from "lucide-react";
+import Link from "next/link";
 import { GoogleAvatar } from "../google-avatar";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 
 export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
@@ -29,13 +30,15 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           </Button>
         </div> */}
         <div className="aspect-square overflow-hidden">
-          <Image
-            src={item.photos[0] || "/Placeholder-product.jpg"}
-            alt={item.name}
-            width={300}
-            height={300}
-            className="object-scale-down w-full h-full group-hover:scale-105 transition-transform duration-300"
-          />
+          <motion.div layoutId={`product-image-${item.id}`}>
+            <Image
+              src={item.photos[0] || "/Placeholder-product.jpg"}
+              alt={item.name}
+              width={300}
+              height={300}
+              className="object-scale-down w-full h-full"
+            />
+          </motion.div>
         </div>
       </div>
       <CardContent className="p-4">
@@ -66,9 +69,12 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
         </div>
       </CardContent>
       <CardFooter className="p-0">
-        <Button className="w-full rounded-none bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white">
+        <Link
+          href={`/dashboard/marketplace/${item.id}`}
+          className="w-full p-2 text-center rounded-none bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
+        >
           View Item
-        </Button>
+        </Link>
       </CardFooter>
     </Card>
   );
