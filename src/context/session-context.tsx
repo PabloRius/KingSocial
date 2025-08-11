@@ -75,7 +75,7 @@ export const SessionProvider = ({
 
   const logoutHandler = useCallback(async () => {
     setLoading(true);
-    await signOut({ redirect: false });
+    await signOut({ redirectTo: "/" });
     await fetchSession();
   }, [fetchSession]);
 

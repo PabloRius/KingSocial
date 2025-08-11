@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { GetProfile } from "@/lib/actions/profile";
-import { cloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import prisma from "@/prisma";
 import { categories, conditions } from "@/types/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -54,30 +54,6 @@ async function parseFormData(req: NextRequest) {
   return { fields, files };
 }
 
-async function uploadToCloudinary(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream(
-        {
-          resource_type: "auto",
-          folder: "marketplace",
-        },
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(error);
-          } else if (result) {
-            resolve(result.secure_url);
-          }
-        }
-      )
-      .end(buffer);
-  });
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { fields, files } = await parseFormData(req);
@@ -103,7 +79,7 @@ export async function POST(req: NextRequest) {
       validation.data;
 
     const imageUrls = await Promise.all(
-      files.map((file) => uploadToCloudinary(file))
+      files.map((file) => uploadToCloudinary(file, "marketplace"))
     );
 
     if (imageUrls.length === 0) {

@@ -16,3 +16,11 @@ export const GetProfile = async (id: string) => {
   });
   return profile;
 };
+
+export const GetProfileByUsername = async (username: string) => {
+  const profile = await prisma.user.findUnique({
+    where: { username },
+    select: userSelect,
+  });
+  return profile;
+};

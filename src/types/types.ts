@@ -1,15 +1,5 @@
 import { Prisma } from "@prisma/client";
 
-export const userSelect = Prisma.validator<Prisma.UserSelect>()({
-  id: true,
-  name: true,
-  email: true,
-  username: true,
-  sellerProfile: true,
-});
-
-export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
-
 export const sellerProfileSelect =
   Prisma.validator<Prisma.SellerProfileSelect>()({
     id: true,
@@ -33,11 +23,29 @@ export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   price: true,
   tags: true,
   pickupLocation: true,
+  status: true,
+  views: true,
 });
 
 export type Product = Prisma.ProductGetPayload<{
   select: typeof productSelect;
 }>;
+
+export const userSelect = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  name: true,
+  email: true,
+  username: true,
+  biography: true,
+  instagram: true,
+  linkedin: true,
+  image: true,
+  coverImage: true,
+  sellerProfile: { include: { products: { select: productSelect } } },
+  createdAt: true,
+});
+
+export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
 
 export const categories = [
   "All Categories",
