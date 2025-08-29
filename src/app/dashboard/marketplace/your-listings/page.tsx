@@ -29,7 +29,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSession } from "@/context/session-context";
-import { getListingsByUserId } from "@/lib/store/marketplace";
+import {
+  getListingsByUserId,
+  removeListingById,
+} from "@/lib/store/marketplace";
 import { categories, Product } from "@/types/types";
 import {
   CheckCircle,
@@ -46,7 +49,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function YourListingsPage() {
   const { session } = useSession();
@@ -58,19 +61,20 @@ export default function YourListingsPage() {
   const [deletingListing, setDeletingListing] = useState<Product | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  useEffect(() => {
+  const fetchListings = useCallback(async () => {
     if (!session || !session?.profile) redirect("/dashboard/marketplace");
-    const fetchListings = async () => {
-      try {
-        const listings = await getListingsByUserId(session?.profile.id);
-        setListings(listings);
-      } catch (error) {
-        console.error("Error fetching user listings: ", error);
-        setListings([]);
-      }
-    };
-    fetchListings();
+    try {
+      const listings = await getListingsByUserId(session?.profile.id);
+      setListings(listings);
+    } catch (error) {
+      console.error("Error fetching user listings: ", error);
+      setListings([]);
+    }
   }, [session]);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
 
   // Sort listings
   //   const sortListings = (listingsToSort: Product[]) => {
@@ -108,13 +112,10 @@ export default function YourListingsPage() {
   const activeListings = listings.filter((l) => l.status === "active");
   const soldListings = listings.filter((l) => l.status === "sold");
   const handleConfirmDelete = async () => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    if (!deletingListing) return;
+    await removeListingById(deletingListing.id);
 
-    // Remove the listing from state
-    setListings(
-      listings.filter((listing) => listing.id !== deletingListing!.id)
-    );
+    fetchListings();
 
     setIsDeleteDialogOpen(false);
     setDeletingListing(null);
@@ -372,7 +373,7 @@ export default function YourListingsPage() {
                 </p>
                 {!searchQuery && categoryFilter === "All Categories" && (
                   <Button asChild>
-                    <Link href="/sell">
+                    <Link href="sell">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Your First Listing
                     </Link>
