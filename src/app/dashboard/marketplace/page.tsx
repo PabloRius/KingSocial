@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/context/session-context";
 import { categories, Category, Condition, conditions } from "@/types/types";
 import {
+  Box,
   Check,
   ChevronDown,
   Filter,
@@ -62,17 +63,30 @@ export default function MarketplacePage() {
             Find, buy, sell, and trade with other students
           </p>
         </div>
-        <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
-          <Link
-            href={
-              sellerProfile ? "marketplace/sell" : "marketplace/select-plan"
-            }
-            className="flex flex-row items-center"
-          >
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            {sellerProfile ? "Sell Something" : "Start Selling"}
-          </Link>
-        </Button>
+        <div className="flex flex-row gap-4">
+          <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
+            <Link
+              href={
+                sellerProfile ? "marketplace/sell" : "marketplace/select-plan"
+              }
+              className="flex flex-row items-center"
+            >
+              <ShoppingBag className="mr-2 h-4 w-4" />
+              {sellerProfile ? "Sell Something" : "Start Selling"}
+            </Link>
+          </Button>
+          {sellerProfile && (
+            <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
+              <Link
+                href="marketplace/your-listings"
+                className="flex flex-row items-center"
+              >
+                <Box className="mr-2 h-4 w-4" />
+                Your listings
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-800 mb-8">

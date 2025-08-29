@@ -25,6 +25,8 @@ export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   pickupLocation: true,
   status: true,
   views: true,
+  createdAt: true,
+  likes: true,
 });
 
 export type Product = Prisma.ProductGetPayload<{
