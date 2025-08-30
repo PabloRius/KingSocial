@@ -155,7 +155,7 @@ export default function YourListingsPage() {
       <div className="relative">
         <div className="aspect-square overflow-hidden">
           <Image
-            src={listing.photos[0] || "/placeholder.svg"}
+            src={listing.photos[0] || "/placeholder.png"}
             alt={listing.name}
             width={300}
             height={300}
@@ -175,13 +175,13 @@ export default function YourListingsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={() => redirect("marketplace/edit-listing")}
+                onClick={() => redirect(`edit-listing/${listing.id}`)}
               >
                 <Edit3 className="mr-2 h-4 w-4" />
                 Edit Listing
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/marketplace/${listing.id}`}>
+                <Link href={`${listing.id}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   View Public
                 </Link>
