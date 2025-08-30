@@ -2,7 +2,6 @@
 
 import type React from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +26,6 @@ import { getListingById, modifyListing } from "@/lib/store/marketplace";
 import { categories, labelledConditions } from "@/types/types";
 import {
   Camera,
-  Eye,
   Loader2,
   Plus,
   PoundSterling,
@@ -60,7 +58,6 @@ export default function EditPage({
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [currentTag, setCurrentTag] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -169,138 +166,6 @@ export default function EditPage({
         <Loader2 className="animate-spin" />
       </div>
     );
-
-  if (showPreview) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-        <main className="flex-1 container py-8 px-4 mx-auto">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Preview Your Listing</h1>
-
-            <Card className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                {/* Images */}
-                <div>
-                  <div className="aspect-square overflow-hidden rounded-lg mb-4">
-                    <Image
-                      src={
-                        formData.photos
-                          ? formData.photos[0]
-                          : "/placeholder.png"
-                      }
-                      alt={formData.name || "Product Image"}
-                      width={400}
-                      height={400}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  {formData.photos && formData.photos.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {formData.photos.slice(1, 5).map((image, index) => (
-                        <div
-                          key={index}
-                          className="aspect-square overflow-hidden rounded"
-                        >
-                          <Image
-                            src={image || "/placeholder.png"}
-                            alt={`${formData.name} ${index + 2}`}
-                            width={100}
-                            height={100}
-                            className="object-cover w-full h-full"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-2xl font-bold">{formData.name}</h2>
-                    <p className="text-3xl font-bold text-celestial-blue-500 mt-2">
-                      ${formData.price}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="rounded-full">
-                      {formData.condition}
-                    </Badge>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {formData.pickupLocation}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-2">Description</h3>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {formData.description}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-2">Category</h3>
-                    <Badge variant="secondary">{formData.category}</Badge>
-                  </div>
-
-                  {formData.tags && formData.tags.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-2">Tags</h3>
-                      <div className="flex flex-wrap gap-1">
-                        {formData.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="text-xs text-celestial-blue-600 dark:text-celestial-blue-400"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3 pt-4 border-t">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src="/placeholder.png?height=32&width=32"
-                        alt="You"
-                      />
-                      <AvatarFallback className="bg-gradient-to-br from-celestial-blue-400 to-picton-blue-500 text-white">
-                        YU
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">You</p>
-                      <p className="text-xs text-gray-500">New Seller</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <div className="flex gap-4 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowPreview(false)}
-                className="flex-1"
-              >
-                Edit Listing
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex-1 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
-              >
-                {isSubmitting ? "Publishing..." : "Update Listing"}
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
@@ -573,15 +438,6 @@ export default function EditPage({
 
             {/* Actions */}
             <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowPreview(true)}
-                className="flex-1"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
