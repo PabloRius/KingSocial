@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { GoogleAvatar } from "@/components/google-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSession } from "@/context/session-context";
+import { getListingById } from "@/lib/store/marketplace";
 import { Product } from "@/types/types";
-import { motion } from "framer-motion";
 import {
+  Box,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -21,6 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function ProductPage({
   params,
@@ -28,7 +31,7 @@ export default function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const [productId, setProductId] = useState<string | null>(null);
-
+  const { session } = useSession();
   useEffect(() => {
     const initPage = async () => {
       const { id } = await params;
@@ -42,35 +45,29 @@ export default function ProductPage({
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProduct = useCallback(
-    async function () {
+  useEffect(() => {
+    const fetchProduct = async () => {
       if (!productId) return;
       try {
         setLoading(true);
-        const response = await fetch(`/api/marketplace/${productId}`);
+        const product = await getListingById(productId);
 
-        if (!response.ok) {
+        if (!product) {
           setProduct(null);
-          throw new Error(
-            `Failed to fetch product: ${response.status} ${response.statusText}`
-          );
+          console.error(`Failed to fetch product: ${productId}`);
         }
-        const data = await response.json();
-        console.log(data);
-        setProduct(data);
+
+        setProduct(product);
       } catch {
         console.error("Error loading the product");
         setProduct(null);
       } finally {
         setLoading(false);
       }
-    },
-    [productId]
-  );
+    };
 
-  useEffect(() => {
     fetchProduct();
-  }, [fetchProduct]);
+  }, [productId]);
 
   if (loading) {
     return (
@@ -115,25 +112,22 @@ export default function ProductPage({
     alert(`Opening message thread with ${product.seller.user.name}...`);
   };
 
+  const isOwner = session?.profile?.id === product.seller.user.id;
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <main className="flex-1 container py-6 px-2 md:px-6 mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Image Gallery */}
           <div className="space-y-4 relative">
-            <div className="relative aspect-square overflow-hidden rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <motion.div
-                layoutId={`product-image-${product.id}`}
-                className="relative"
-              >
-                <Image
-                  src={product.photos[currentImageIndex] || "/placeholder.svg"}
-                  alt={product.name}
-                  width={600}
-                  height={600}
-                  className="object-cover w-full h-full"
-                />
-              </motion.div>
+            <div className="relative flex items-center aspect-square overflow-hidden rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+              <Image
+                src={product.photos[currentImageIndex] || "/placeholder.png"}
+                alt={product.name}
+                width={600}
+                height={600}
+                className="object-contain w-full h-full"
+              />
               {product.photos.length > 1 && (
                 <>
                   <Button
@@ -258,11 +252,21 @@ export default function ProductPage({
             {/* Action Buttons */}
             <div className="space-y-3">
               <Button
-                onClick={handleMessageSeller}
+                onClick={
+                  isOwner
+                    ? () => {
+                        redirect(`edit-listing/${productId}`);
+                      }
+                    : handleMessageSeller
+                }
                 className="w-full h-12 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white rounded-xl font-medium"
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Message Seller
+                {isOwner ? (
+                  <Box className="mr-2 h-5 w-5" />
+                ) : (
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                )}
+                {isOwner ? "Edit Listing" : "Message Seller"}
               </Button>
             </div>
 
