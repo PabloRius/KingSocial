@@ -4,33 +4,26 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
-const routeMap: Record<string, { label: string; href: string }> = {
-  "/dashboard/marketplace": { label: "Dashboard", href: "/dashboard" },
-  "/dashboard/marketplace/sell": {
-    label: "Marketplace",
-    href: "/dashboard/marketplace",
-  },
-  "/dashboard/marketplace/select-plan": {
-    label: "Marketplace",
-    href: "/dashboard/marketplace",
-  },
-};
-
 export function FloatingBackButton() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const currentRoute = routeMap[pathname];
-  if (!currentRoute) return null;
+  let currentRoute: { label: string; href: string } | null = null;
 
-  const handleBack = () => {
-    router.push(currentRoute.href);
-  };
+  if (pathname === "/dashboard/marketplace") {
+    currentRoute = { label: "Dashboard", href: "/dashboard" };
+  } else if (pathname.startsWith("/dashboard/marketplace/")) {
+    currentRoute = { label: "Marketplace", href: "/dashboard/marketplace" };
+  }
+
+  if (!currentRoute) return null;
 
   return (
     <div className="fixed bottom-6 left-6 z-50">
       <Button
-        onClick={handleBack}
+        onClick={() => {
+          router.push(currentRoute.href);
+        }}
         className="h-12 px-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 rounded-full group"
         variant="outline"
       >
