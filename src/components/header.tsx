@@ -14,7 +14,7 @@ export const Header = () => {
       >
         <Link href="/" className="flex justify-center">
           <div className="relative flex items-center">
-            <span className="text-3xl py-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 mr-2">
+            <span className="text-3xl py-2 font-bold bg-clip-text text-transparent bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500">
               King
             </span>
             <span className="text-3xl font-bold">Social</span>

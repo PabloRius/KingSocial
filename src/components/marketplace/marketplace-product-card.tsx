@@ -6,9 +6,9 @@ import Image from "next/image";
 // import { GoogleAvatar } from "./google-avatar";
 import { Star } from "lucide-react";
 import Link from "next/link";
-import { GoogleAvatar } from "../google-avatar";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardFooter } from "../ui/card";
+import { UserAvatar } from "../user-avatar";
 
 export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
   return (
@@ -58,7 +58,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           )}
         </div>
         <div className="flex items-center gap-2 mt-3">
-          <GoogleAvatar name={item.seller.user.name || undefined} />
+          <UserAvatar name={item.seller.user.name || undefined} />
           <span className="text-sm">{item.seller.user.name}</span>
           {item.seller.rating && (
             <div className="flex items-center ml-auto">

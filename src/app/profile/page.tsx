@@ -1,7 +1,5 @@
 "use client";
 
-import { GoogleAvatar } from "@/components/google-avatar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import {
   Camera,
@@ -233,19 +232,11 @@ export default function ProfilePage() {
             <div className="absolute top-1/2 -translate-y-1/2 px-6">
               <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
                 <div className="relative group">
-                  <Avatar className="h-32 w-32">
-                    <AvatarImage
-                      src={imagesData.image}
-                      alt={session.profile.name || ""}
-                      className="border-4 border-white dark:border-gray-800 shadow-lg"
-                    />
-                    <AvatarFallback>
-                      <GoogleAvatar
-                        name={session.profile.name || ""}
-                        className="text-3xl w-full h-full"
-                      />
-                    </AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    avatarUrl={session.profile.image || undefined}
+                    name={session.profile.name || ""}
+                    className="text-3xl h-32 w-32"
+                  />
                   {isEditing && (
                     <>
                       <input

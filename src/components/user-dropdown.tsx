@@ -11,31 +11,33 @@ import {
 import { useSession } from "@/context/session-context";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
-import { GoogleAvatar } from "./google-avatar";
+import { UserAvatar } from "./user-avatar";
 
-export function UserDropdown({
-  name,
-  email,
-}: {
-  name: string | undefined;
-  email: string | undefined;
-}) {
+export function UserDropdown() {
   const {
     handlers: { logout },
+    session,
   } = useSession();
+
+  if (!session?.profile) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="cursor-pointer flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-1 transition-all">
-          <GoogleAvatar name={name} />
+          <UserAvatar
+            avatarUrl={session.profile.image || undefined}
+            name={session.profile.name || undefined}
+          />
         </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel>
-          <p className="font-medium">{name}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{email}</p>
+          <p className="font-medium">{session.profile.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {session.profile.email}
+          </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 

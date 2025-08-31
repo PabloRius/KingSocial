@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
-import { userSelect } from "@/types/types";
+import { userSelect } from "../models/User";
 
 export const getProfileImage = async () => {
   const session = await auth();

@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-import { GoogleAvatar } from "@/components/google-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { getListingById } from "@/lib/store/marketplace";
 import { Product } from "@/types/types";
@@ -277,7 +277,7 @@ export default function ProductPage({
               </CardHeader>
               <CardContent>
                 <div className="flex items-start gap-4">
-                  <GoogleAvatar name={product.seller.user.name || undefined} />
+                  <UserAvatar name={product.seller.user.name || undefined} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {product.seller.user.name}

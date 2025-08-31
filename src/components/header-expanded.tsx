@@ -8,7 +8,7 @@ import { UserDropdown } from "./user-dropdown";
 export const HeaderExpanded = () => {
   const { session } = useSession();
   if (!session?.profile) return;
-  const { name, email, sellerProfile } = session.profile;
+  const { sellerProfile } = session.profile;
   const alerts = 0;
   const messages = 0;
   return (
@@ -40,7 +40,7 @@ export const HeaderExpanded = () => {
         </Button>
       )}
       <div className="relative group">
-        <UserDropdown name={name || undefined} email={email || undefined} />
+        <UserDropdown />
       </div>
     </div>
   );
