@@ -16,17 +16,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import {
+  ArrowRight,
   Camera,
   DollarSign,
   Edit3,
   Eye,
+  Heart,
   Loader2,
-  Lock,
+  MessageCircle,
   Package,
   Save,
-  Shield,
   Star,
   Trash2,
+  TrendingUp,
   Users,
   X,
 } from "lucide-react";
@@ -35,8 +37,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const currentUser = {
-  joinDate: "August 2023",
-  verified: true,
   isSellerActive: true,
   sellerPlan: "Pro",
   stats: {
@@ -45,6 +45,14 @@ const currentUser = {
     rating: 4.7,
     reviewCount: 28,
     activeListings: 5,
+  },
+  communityStats: {
+    posts: 42,
+    followers: 156,
+    following: 89,
+    likes: 324,
+    comments: 187,
+    shares: 45,
   },
 };
 
@@ -266,12 +274,6 @@ export default function ProfilePage() {
                         <h1 className="text-3xl font-bold">
                           {session.profile.name}
                         </h1>
-                        {currentUser.verified && (
-                          <Shield
-                            className="h-6 w-6 text-celestial-blue-500"
-                            fill="currentColor"
-                          />
-                        )}
                       </div>
                       <p className="text-gray-600 dark:text-gray-400 mb-2">
                         @{session.profile.username}
@@ -285,7 +287,16 @@ export default function ProfilePage() {
                           <span>({currentUser.stats.reviewCount} reviews)</span>
                         </div>
                         <span>•</span>
-                        <span>Joined {currentUser.joinDate}</span>
+                        <span>
+                          Joined{" "}
+                          {new Date(session.profile.createdAt).toLocaleString(
+                            "en-US",
+                            {
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -326,54 +337,6 @@ export default function ProfilePage() {
             </Button>
           </div>
         </div>
-
-        {/* Seller Stats */}
-        {currentUser.isSellerActive && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-celestial-blue-500">
-                  {currentUser.stats.totalSales}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Items Sold
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-celestial-blue-500">
-                  ${currentUser.stats.totalEarnings}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Earned
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-celestial-blue-500">
-                  {currentUser.stats.activeListings}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Active Listings
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <Badge className="bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 text-white">
-                    {currentUser.sellerPlan}
-                  </Badge>
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Seller Plan
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Settings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -480,6 +443,170 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </div>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mt-6">
+              {/* Seller Stats Summary */}
+              {currentUser.isSellerActive && (
+                <Card className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-celestial-blue-50 to-picton-blue-50 dark:from-celestial-blue-900/10 dark:to-picton-blue-900/10"></div>
+                  <CardHeader className="relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-lg bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500">
+                          <Package className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            Seller Dashboard
+                          </CardTitle>
+                          <CardDescription>
+                            Your marketplace performance
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge className="bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 text-white">
+                        {currentUser.sellerPlan}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-celestial-blue-600">
+                          {currentUser.stats.totalSales}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Items Sold
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-celestial-blue-600">
+                          ${currentUser.stats.totalEarnings}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Total Earned
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold">
+                          {currentUser.stats.activeListings}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          Active Listings
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-lg font-semibold">
+                            {currentUser.stats.rating}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          {currentUser.stats.reviewCount} Reviews
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      asChild
+                      className="w-full bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
+                    >
+                      <Link href="/marketplace/your-listings">
+                        View Seller Dashboard
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Community Stats Summary */}
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10"></div>
+                <CardHeader className="relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500">
+                        <Users className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">Community Hub</CardTitle>
+                        <CardDescription>
+                          Your social engagement
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Active</span>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="relative">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {currentUser.communityStats.posts}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Posts
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {currentUser.communityStats.followers}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Followers
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Heart className="h-3 w-3 text-red-500" />
+                        <span className="text-sm font-semibold">
+                          {currentUser.communityStats.likes}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Likes
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <MessageCircle className="h-3 w-3 text-blue-500" />
+                        <span className="text-sm font-semibold">
+                          {currentUser.communityStats.comments}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Comments
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold">
+                        {currentUser.communityStats.following}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Following
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    <Link href="/community">
+                      View Community Page
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="account" className="mt-6">
@@ -490,13 +617,6 @@ export default function ProfilePage() {
                   <CardDescription>Keep your account secure</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start bg-transparent"
-                  >
-                    <Lock className="mr-2 h-4 w-4" />
-                    Change Password
-                  </Button>
                   <div className="pt-4 border-t">
                     <Button variant="destructive" className="w-full">
                       <Trash2 className="mr-2 h-4 w-4" />
