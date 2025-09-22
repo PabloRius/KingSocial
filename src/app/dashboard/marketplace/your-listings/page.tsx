@@ -29,11 +29,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSession } from "@/context/session-context";
+import { Product } from "@/lib/models/Product";
 import {
   getListingsByUserId,
   removeListingById,
+  sellListing,
 } from "@/lib/store/marketplace";
-import { categories, Product } from "@/types/types";
+import { categories } from "@/types/types";
 import {
   CheckCircle,
   DollarSign,
@@ -127,17 +129,8 @@ export default function YourListingsPage() {
   };
 
   const handleMarkAsSold = async (listingId: string) => {
-    setListings(
-      listings.map((listing) =>
-        listing.id === listingId
-          ? {
-              ...listing,
-              status: "sold",
-              soldDate: new Date().toISOString().split("T")[0],
-            }
-          : listing
-      )
-    );
+    sellListing(listingId);
+    fetchListings();
   };
 
   const totalStats = {
@@ -205,7 +198,7 @@ export default function YourListingsPage() {
         </div>
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 pb-0">
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-semibold text-lg line-clamp-1">{listing.name}</h3>
           <span className="font-bold text-lg text-celestial-blue-500">
@@ -246,12 +239,12 @@ export default function YourListingsPage() {
           )}
         </div>
 
-        {/* <div className="text-xs text-gray-500 dark:text-gray-400">
-          <div>Posted: {new Date(listing.postedDate).toLocaleDateString()}</div>
-          {listing.status === "sold" && listing.soldDate && (
-            <div>Sold: {new Date(listing.soldDate).toLocaleDateString()}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div>Posted: {new Date(listing.createdAt).toLocaleDateString()}</div>
+          {listing.status === "sold" && listing.soldAt && (
+            <div>Sold: {new Date(listing.soldAt).toLocaleDateString()}</div>
           )}
-        </div> */}
+        </div>
       </CardContent>
     </Card>
   );

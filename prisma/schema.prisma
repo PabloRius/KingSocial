@@ -111,4 +111,5 @@ model Product {
   sellerId        String?         @db.ObjectId
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  soldAt          DateTime?
 }

@@ -2,9 +2,8 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
-import { Product, productSelect } from "@/types/types";
 import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary";
-import { UpdateProduct } from "../models/Product";
+import { Product, productSelect, UpdateProduct } from "../models/Product";
 
 export async function getListingById(id: string): Promise<Product | null> {
   try {
@@ -116,5 +115,30 @@ export async function modifyListing(
     });
   } catch (error) {
     console.error("Error deleting listing: ", id, error);
+  }
+}
+
+export async function sellListing(id: string): Promise<void> {
+  const session = await auth();
+  const sessionUserId = session?.user?.id;
+  if (!sessionUserId) {
+    throw new Error("Unauthorized");
+  }
+
+  const storedListing = await prisma.product.findUnique({
+    where: { id: id },
+    select: { seller: { select: { userId: true } }, photos: true },
+  });
+  const listingOwnerId = storedListing?.seller?.userId;
+  if (listingOwnerId !== sessionUserId) {
+    throw new Error("Unauthorized");
+  }
+  try {
+    await prisma.product.update({
+      where: { id: id },
+      data: { status: "sold", soldAt: new Date() },
+    });
+  } catch (error) {
+    console.error("Error marking listing as sold: ", id, error);
   }
 }

@@ -534,7 +534,7 @@ export default function ProfilePage() {
                       asChild
                       className="w-full bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
                     >
-                      <Link href="/marketplace/your-listings">
+                      <Link href="/dashboard/marketplace/your-listings">
                         View Seller Dashboard
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
