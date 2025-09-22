@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const currentUser = {
@@ -59,7 +58,11 @@ const currentUser = {
 };
 
 export default function ProfilePage() {
-  const { loading, session } = useSession();
+  const {
+    loading,
+    session,
+    handlers: { logout },
+  } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [formData, setFormData] = useState({
@@ -83,8 +86,6 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-
-  const router = useRouter();
 
   useEffect(() => {
     if (session) {
@@ -213,7 +214,7 @@ export default function ProfilePage() {
         return;
       }
       await deleteProfileById(session.profile.id);
-      router.push("/");
+      logout();
     } catch (error) {
       console.error("Error deleting account: ", error);
     }
