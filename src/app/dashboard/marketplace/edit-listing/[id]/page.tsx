@@ -21,27 +21,64 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { UpdateProduct } from "@/lib/models/Product";
+import { getListingById, modifyListing } from "@/lib/store/marketplace";
 import { categories, labelledConditions } from "@/types/types";
-import { Camera, Plus, PoundSterling, Tag, Upload, X } from "lucide-react";
+import {
+  Camera,
+  Loader2,
+  Plus,
+  PoundSterling,
+  Tag,
+  Upload,
+  X,
+} from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
-export default function SellPage() {
-  const [formData, setFormData] = useState({
-    title: "",
+export default function EditPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [listingId, setListingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<UpdateProduct>({
+    name: "",
     description: "",
-    price: "",
+    price: 0,
     category: "",
     condition: "",
-    location: "",
-    tags: [] as string[],
+    pickupLocation: "",
+    tags: [],
+    photos: [],
   });
-  const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [currentTag, setCurrentTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      const { id } = await params;
+      setListingId(id);
+      try {
+        setLoading(true);
+        const listing = await getListingById(id);
+        if (!listing) router.push("/dashboard/marketplace/your-listings");
+        setFormData(listing as UpdateProduct);
+      } catch (error) {
+        console.error("Error fetching listing: ", error);
+        router.push("/dashboard/marketplace/your-listings");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchListing();
+  }, [params, router]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -62,38 +99,49 @@ export default function SellPage() {
       validFiles.push(file);
     }
 
-    if (images.length + validFiles.length > 5) {
+    if (formData.photos && formData.photos.length + validFiles.length > 5) {
       alert("You can upload a maximum of 5 images per product.");
       return;
     }
 
     const filePreviews = validFiles.map((file) => URL.createObjectURL(file));
     setImageFiles((prev) => [...prev, ...validFiles]);
-    setImages((prev) => [...prev, ...filePreviews]);
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos ? [...prev.photos, ...filePreviews] : filePreviews,
+    }));
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos!.filter((_, i) => i !== index),
+    }));
   };
 
   const addTag = () => {
-    if (
-      currentTag.trim() &&
-      !formData.tags.includes(currentTag.trim()) &&
-      formData.tags.length < 5
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, currentTag.trim()],
-      }));
-      setCurrentTag("");
-    }
+    setFormData((prev) => {
+      if (
+        prev.tags &&
+        currentTag.trim() &&
+        !prev.tags.includes(currentTag.trim()) &&
+        prev.tags.length < 5
+      ) {
+        return {
+          ...prev,
+          tags: [...prev.tags, currentTag.trim()],
+        };
+      } else if (!prev.tags) {
+        return { ...prev, tags: [currentTag.trim()] };
+      } else return prev;
+    });
+    setCurrentTag("");
   };
 
   const removeTag = (tagToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+      tags: prev.tags!.filter((tag) => tag !== tagToRemove),
     }));
   };
 
@@ -101,55 +149,30 @@ export default function SellPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const data = new FormData();
-    data.append("title", formData.title);
-    data.append("description", formData.description);
-    data.append("price", formData.price);
-    data.append("category", formData.category);
-    data.append("condition", formData.condition);
-    data.append("location", formData.location);
-    formData.tags.forEach((tag) => data.append("tags", tag));
-
-    imageFiles.forEach((file) => data.append("images", file));
-
     try {
-      const res = await fetch("/api/sell", {
-        method: "POST",
-        body: data,
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Error: ${error.message}`);
-        return;
-      }
-
-      window.location.href = "/dashboard/marketplace";
-    } catch {
-      alert("Something went wrong.");
+      if (!listingId) return;
+      await modifyListing(listingId, formData, imageFiles);
+      router.push("/dashboard/marketplace/your-listings");
+    } catch (error) {
+      console.error("Error updating listing: ", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const isFormValid = () => {
+  if (loading)
     return (
-      formData.title.trim() &&
-      formData.description.trim() &&
-      formData.price &&
-      formData.category &&
-      formData.condition &&
-      formData.location &&
-      images.length > 0
+      <div className="flex flex-1 w-full items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
     );
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <main className="flex-1 container py-8 px-4 mx-auto">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Create New Listing</h1>
+            <h1 className="text-3xl font-bold mb-2">Update Your Listing</h1>
             <p className="text-gray-600 dark:text-gray-400">
               Fill out the details below to list your item on the marketplace
             </p>
@@ -170,33 +193,34 @@ export default function SellPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <Image
-                        src={image || "/placeholder.svg"}
-                        alt={`Upload ${index + 1}`}
-                        width={200}
-                        height={200}
-                        className="object-cover w-full h-full rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                      {index === 0 && (
-                        <Badge className="absolute bottom-2 left-2 text-xs">
-                          Main
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                  {formData.photos &&
+                    formData.photos.map((image, index) => (
+                      <div key={index} className="relative aspect-square">
+                        <Image
+                          src={image || "/placeholder.png"}
+                          alt={`Upload ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="object-cover w-full h-full rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                        {index === 0 && (
+                          <Badge className="absolute bottom-2 left-2 text-xs">
+                            Main
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
 
-                  {images.length < 10 && (
+                  {formData.photos && formData.photos.length < 10 && (
                     <label className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-celestial-blue-500 transition-colors">
                       <Upload className="h-8 w-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-500">Add Photo</span>
@@ -220,18 +244,18 @@ export default function SellPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Title *</Label>
+                  <Label htmlFor="name">Title</Label>
                   <Input
-                    id="title"
+                    id="name"
                     placeholder="e.g., MacBook Pro 2021, Physics Textbook, Desk Lamp..."
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     placeholder="Describe your item's condition, features, and any other relevant details..."
@@ -245,7 +269,7 @@ export default function SellPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price">Price *</Label>
+                    <Label htmlFor="price">Price</Label>
                     <div className="relative mt-1">
                       <PoundSterling className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                       <Input
@@ -284,13 +308,13 @@ export default function SellPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location">Pickup Location *</Label>
+                    <Label htmlFor="pickupLocation">Pickup Location</Label>
                     <Input
-                      id="title"
+                      id="pickupLocation"
                       placeholder="e.g., City Hall, Penrhyn Road Campus, Central London, etc"
-                      value={formData.location}
+                      value={formData.pickupLocation}
                       onChange={(e) =>
-                        handleInputChange("location", e.target.value)
+                        handleInputChange("pickupLocation", e.target.value)
                       }
                       className="mt-1"
                     />
@@ -299,7 +323,7 @@ export default function SellPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="condition">Condition *</Label>
+                    <Label htmlFor="condition">Condition</Label>
                     <Select
                       value={formData.condition}
                       onValueChange={(value) =>
@@ -329,7 +353,7 @@ export default function SellPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="category">Category *</Label>
+                    <Label htmlFor="category">Category</Label>
                     <Select
                       value={formData.category}
                       onValueChange={(value) =>
@@ -372,19 +396,22 @@ export default function SellPage() {
                     onKeyPress={(e) =>
                       e.key === "Enter" && (e.preventDefault(), addTag())
                     }
-                    disabled={formData.tags.length >= 5}
+                    disabled={formData.tags && formData.tags.length >= 5}
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={addTag}
-                    disabled={!currentTag.trim() || formData.tags.length >= 5}
+                    disabled={
+                      !currentTag.trim() ||
+                      (formData.tags && formData.tags.length >= 5)
+                    }
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
-                {formData.tags.length > 0 && (
+                {formData.tags && formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag, index) => (
                       <Badge
@@ -413,10 +440,10 @@ export default function SellPage() {
             <div className="flex gap-4">
               <Button
                 type="submit"
-                disabled={!isFormValid() || isSubmitting}
+                disabled={isSubmitting}
                 className="flex-1 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
               >
-                {isSubmitting ? "Publishing..." : "Publish Listing"}
+                {isSubmitting ? "Publishing..." : "Update Listing"}
               </Button>
             </div>
           </form>

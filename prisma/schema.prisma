@@ -30,6 +30,10 @@ model User {
 
   username      String          @unique
   sellerProfile SellerProfile?
+  biography     String?
+  instagram     String?
+  linkedin      String?
+  coverImage    String?
 }
  
 model Account {
@@ -76,15 +80,16 @@ model VerificationToken {
 
 // Prisma auth adapter - end
 
-// App specific schemas - start
+// App-specific schemas - start
 
 model SellerProfile {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String    @unique @db.ObjectId
   rating    Int?
   products  Product[]
   plan      String    @default("basic")
+  totalSales Int      @default(0)
 }
 
 model Product {
@@ -97,8 +102,14 @@ model Product {
   category        String
   tags            String[]
   photos          String[]
-  seller          SellerProfile   @relation(fields: [sellerId], references: [id])
-  sellerId        String          @db.ObjectId
+
+  status          String          @default("active")
+  views           Int             @default(0)
+  likes           Int             @default(0)
+  
+  seller          SellerProfile?  @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerId        String?         @db.ObjectId
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  soldAt          DateTime?
 }

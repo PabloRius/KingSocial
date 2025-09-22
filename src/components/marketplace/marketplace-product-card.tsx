@@ -1,13 +1,14 @@
 import { Product } from "@/types/types";
 // import { Heart } from "lucide-react";
 // import { Heart, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 // import { GoogleAvatar } from "./google-avatar";
 import { Star } from "lucide-react";
-import { GoogleAvatar } from "../google-avatar";
+import Link from "next/link";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
+import { UserAvatar } from "../user-avatar";
 
 export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
   return (
@@ -29,13 +30,15 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           </Button>
         </div> */}
         <div className="aspect-square overflow-hidden">
-          <Image
-            src={item.photos[0] || "/Placeholder-product.jpg"}
-            alt={item.name}
-            width={300}
-            height={300}
-            className="object-scale-down w-full h-full group-hover:scale-105 transition-transform duration-300"
-          />
+          <motion.div layoutId={`product-image-${item.id}`}>
+            <Image
+              src={item.photos[0] || "/Placeholder-product.jpg"}
+              alt={item.name}
+              width={300}
+              height={300}
+              className="object-scale-down w-full h-full"
+            />
+          </motion.div>
         </div>
       </div>
       <CardContent className="p-4">
@@ -55,20 +58,32 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           )}
         </div>
         <div className="flex items-center gap-2 mt-3">
-          <GoogleAvatar name={item.seller.user.name || undefined} />
-          <span className="text-sm">{item.seller.user.name}</span>
-          {item.seller.rating && (
-            <div className="flex items-center ml-auto">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs ml-1">{item.seller.rating}</span>
-            </div>
+          {item.seller ? (
+            <>
+              <UserAvatar
+                name={item.seller.user.name || undefined}
+                avatarUrl={item.seller.user.image || undefined}
+              />
+              <span className="text-sm">{item.seller.user.name}</span>
+              {item.seller.rating && (
+                <div className="flex items-center ml-auto">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs ml-1">{item.seller.rating}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            "Account Deleted"
           )}
         </div>
       </CardContent>
       <CardFooter className="p-0">
-        <Button className="w-full rounded-none bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white">
+        <Link
+          href={`/dashboard/marketplace/${item.id}`}
+          className="w-full p-2 text-center rounded-none bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white"
+        >
           View Item
-        </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

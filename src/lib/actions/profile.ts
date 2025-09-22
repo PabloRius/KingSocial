@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
-import { userSelect } from "@/types/types";
+import { userSelect } from "../models/User";
 
 export const getProfileImage = async () => {
   const session = await auth();
@@ -12,6 +12,14 @@ export const getProfileImage = async () => {
 export const GetProfile = async (id: string) => {
   const profile = await prisma.user.findUnique({
     where: { id },
+    select: userSelect,
+  });
+  return profile;
+};
+
+export const GetProfileByUsername = async (username: string) => {
+  const profile = await prisma.user.findUnique({
+    where: { username },
     select: userSelect,
   });
   return profile;

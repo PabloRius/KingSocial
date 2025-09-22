@@ -1,9 +1,14 @@
+import { auth } from "@/auth";
+import { GetProfile } from "@/lib/actions/profile";
 import prisma from "@/prisma";
 import { productSelect } from "@/types/types";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
+    const session = await auth();
+
+    const user = session?.user?.id ? await GetProfile(session.user.id) : null;
     const { searchParams } = new URL(req.url);
 
     const search = searchParams.get("search") || "";
@@ -30,6 +35,7 @@ export async function GET(req: Request) {
             category && category !== "All Categories" ? { category } : {},
             condition && condition !== "Any" ? { condition } : {},
             { price: { gte: minPrice, lte: maxPrice } },
+            { sellerId: { not: user?.sellerProfile?.id } },
           ],
         },
         select: productSelect,
