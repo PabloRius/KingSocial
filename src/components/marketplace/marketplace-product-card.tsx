@@ -58,16 +58,22 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           )}
         </div>
         <div className="flex items-center gap-2 mt-3">
-          <UserAvatar
-            name={item.seller.user.name || undefined}
-            avatarUrl={item.seller.user.image || undefined}
-          />
-          <span className="text-sm">{item.seller.user.name}</span>
-          {item.seller.rating && (
-            <div className="flex items-center ml-auto">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs ml-1">{item.seller.rating}</span>
-            </div>
+          {item.seller ? (
+            <>
+              <UserAvatar
+                name={item.seller.user.name || undefined}
+                avatarUrl={item.seller.user.image || undefined}
+              />
+              <span className="text-sm">{item.seller.user.name}</span>
+              {item.seller.rating && (
+                <div className="flex items-center ml-auto">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs ml-1">{item.seller.rating}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            "Account Deleted"
           )}
         </div>
       </CardContent>

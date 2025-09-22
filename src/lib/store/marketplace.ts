@@ -49,7 +49,7 @@ export async function removeListingById(listingId: string): Promise<void> {
     where: { id: listingId },
     select: { seller: { select: { userId: true } }, photos: true },
   });
-  const listingOwnerId = listing?.seller.userId;
+  const listingOwnerId = listing?.seller?.userId;
   if (listingOwnerId !== sessionUserId) {
     throw new Error("Unauthorized");
   }
@@ -79,7 +79,7 @@ export async function modifyListing(
     where: { id: id },
     select: { seller: { select: { userId: true } }, photos: true },
   });
-  const listingOwnerId = storedListing?.seller.userId;
+  const listingOwnerId = storedListing?.seller?.userId;
   if (listingOwnerId !== sessionUserId) {
     throw new Error("Unauthorized");
   }

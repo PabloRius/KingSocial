@@ -108,11 +108,11 @@ export default function ProductPage({
   };
 
   const handleMessageSeller = () => {
-    // In a real app, this would open a messaging interface
+    if (!product.seller) return;
     alert(`Opening message thread with ${product.seller.user.name}...`);
   };
 
-  const isOwner = session?.profile?.id === product.seller.user.id;
+  const isOwner = session?.profile?.id === product.seller?.user.id;
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
@@ -276,27 +276,28 @@ export default function ProductPage({
                 <CardTitle className="text-lg">Seller Information</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-start gap-4">
-                  <UserAvatar
-                    name={product.seller.user.name || undefined}
-                    avatarUrl={product.seller.user.image || undefined}
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {product.seller.user.name}
-                    </div>
-                    <div className="flex items-center gap-1 mb-2">
-                      {product.seller.rating && (
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="ml-1 text-sm font-medium">
-                            {product.seller.rating}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      {/* <div className="flex items-center gap-1">
+                {product.seller ? (
+                  <div className="flex items-start gap-4">
+                    <UserAvatar
+                      name={product.seller.user.name || undefined}
+                      avatarUrl={product.seller.user.image || undefined}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {product.seller.user.name}
+                      </div>
+                      <div className="flex items-center gap-1 mb-2">
+                        {product.seller.rating && (
+                          <div className="flex items-center">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span className="ml-1 text-sm font-medium">
+                              {product.seller.rating}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        {/* <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>{product.seller.responseTime}</span>
                       </div>
@@ -308,16 +309,23 @@ export default function ProductPage({
                         <Calendar className="h-3 w-3" />
                         <span>Joined {product.seller.joinDate}</span>
                       </div> */}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Separator className="my-4" />
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={`/profile/${product.seller.user.username}`}>
-                    <User className="mr-2 h-4 w-4" />
-                    View Seller Profile
-                  </Link>
-                </Button>
+                ) : (
+                  "Account Deleted"
+                )}
+                {product.seller && (
+                  <>
+                    <Separator className="my-4" />
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href={`/profile/${product.seller.user.username}`}>
+                        <User className="mr-2 h-4 w-4" />
+                        View Seller Profile
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
+import { deleteProfileById } from "@/lib/store/profile";
 import {
   ArrowRight,
   Camera,
@@ -57,7 +58,11 @@ const currentUser = {
 };
 
 export default function ProfilePage() {
-  const { loading, session } = useSession();
+  const {
+    loading,
+    session,
+    handlers: { logout },
+  } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [formData, setFormData] = useState({
@@ -196,6 +201,22 @@ export default function ProfilePage() {
         coverImage: imagePreview,
         coverImageFile: file,
       }));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      if (
+        !confirm(
+          "Are you sure you want to delete your account? This action cannot be undone."
+        )
+      ) {
+        return;
+      }
+      await deleteProfileById(session.profile.id);
+      logout();
+    } catch (error) {
+      console.error("Error deleting account: ", error);
     }
   };
 
@@ -618,7 +639,11 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="pt-4 border-t">
-                    <Button variant="destructive" className="w-full">
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      className="w-full"
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete Account
                     </Button>

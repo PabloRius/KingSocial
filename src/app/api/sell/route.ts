@@ -7,8 +7,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const productSchema = z.object({
-  title: z.string().min(3),
-  description: z.string().min(10),
+  title: z.string().min(1),
+  description: z.string().min(1),
   price: z.coerce.number().positive(),
   category: z.enum(categories),
   condition: z.enum(conditions),
