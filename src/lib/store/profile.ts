@@ -30,3 +30,17 @@ export async function getProfileByUsername(
     return null;
   }
 }
+
+export async function deleteProfileById(id: string) {
+  try {
+    const userToDelete = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (!userToDelete) {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error("Error deleting user for id: ", id, error);
+    throw error;
+  }
+}

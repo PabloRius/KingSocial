@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
+import { deleteProfileById } from "@/lib/store/profile";
 import {
   ArrowRight,
   Camera,
@@ -34,6 +35,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const currentUser = {
@@ -81,6 +83,8 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     if (session) {
@@ -196,6 +200,22 @@ export default function ProfilePage() {
         coverImage: imagePreview,
         coverImageFile: file,
       }));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      if (
+        !confirm(
+          "Are you sure you want to delete your account? This action cannot be undone."
+        )
+      ) {
+        return;
+      }
+      await deleteProfileById(session.profile.id);
+      router.push("/");
+    } catch (error) {
+      console.error("Error deleting account: ", error);
     }
   };
 
@@ -618,7 +638,11 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="pt-4 border-t">
-                    <Button variant="destructive" className="w-full">
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteAccount}
+                      className="w-full"
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete Account
                     </Button>
