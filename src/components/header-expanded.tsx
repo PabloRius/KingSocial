@@ -1,14 +1,14 @@
 "use client";
 import { useSession } from "@/context/session-context";
 import { Bell, MessageSquare } from "lucide-react";
-import { DropdownMenu } from "./dropdown-menu";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { UserDropdown } from "./user-dropdown";
 
 export const HeaderExpanded = () => {
   const { session } = useSession();
   if (!session?.profile) return;
-  const { name, email, sellerProfile } = session.profile;
+  const { sellerProfile } = session.profile;
   const alerts = 0;
   const messages = 0;
   return (
@@ -40,7 +40,7 @@ export const HeaderExpanded = () => {
         </Button>
       )}
       <div className="relative group">
-        <DropdownMenu name={name || undefined} email={email || undefined} />
+        <UserDropdown />
       </div>
     </div>
   );

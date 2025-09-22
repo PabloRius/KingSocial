@@ -2,10 +2,12 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
-export const GoogleAvatar = ({
+export const UserAvatar = ({
+  avatarUrl,
   name,
   className,
 }: {
+  avatarUrl: string | undefined;
   name: string | undefined;
   className?: string;
 }) => {
@@ -26,7 +28,7 @@ export const GoogleAvatar = ({
     <Avatar
       className={`h-8 w-8 border-2 border-white dark:border-gray-800 group-hover:border-celestial-blue-200 dark:group-hover:border-celestial-blue-900 transition-all ${className}`}
     >
-      <AvatarImage src={undefined} alt={name} />
+      <AvatarImage src={avatarUrl} alt={name} />
       <AvatarFallback className="bg-gradient-to-br from-celestial-blue-400 to-picton-blue-500 text-white">
         {getInitials()}
       </AvatarFallback>
