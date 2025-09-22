@@ -277,7 +277,10 @@ export default function ProductPage({
               </CardHeader>
               <CardContent>
                 <div className="flex items-start gap-4">
-                  <UserAvatar name={product.seller.user.name || undefined} />
+                  <UserAvatar
+                    name={product.seller.user.name || undefined}
+                    avatarUrl={product.seller.user.image || undefined}
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {product.seller.user.name}
