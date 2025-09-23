@@ -543,7 +543,7 @@ export function FeaturedSection({
         </div>
       ) : (
         <p className="text-gray-500 dark:text-gray-400">
-          No featured items yet.
+          No featured items yet
         </p>
       )}
     </CollapsibleSection>
