@@ -142,3 +142,52 @@ export async function sellListing(id: string): Promise<void> {
     console.error("Error marking listing as sold: ", id, error);
   }
 }
+
+export async function toggleBookmarkListing(id: string): Promise<void> {
+  const session = await auth();
+  const sessionUserId = session?.user?.id;
+  if (!sessionUserId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: sessionUserId },
+      select: { bookmarkedProducts: true },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const isBookmarked = user.bookmarkedProducts.includes(id);
+
+    if (isBookmarked) {
+      // Remove bookmark
+      await prisma.user.update({
+        where: { id: sessionUserId },
+        data: {
+          bookmarkedProducts: {
+            set: user.bookmarkedProducts.filter((prodId) => prodId !== id),
+          },
+        },
+      });
+      await prisma.product.update({
+        where: { id },
+        data: { bookmarks: { decrement: 1 } },
+      });
+    } else {
+      // Add bookmark
+      await prisma.user.update({
+        where: { id: sessionUserId },
+        data: {
+          bookmarkedProducts: { push: id },
+        },
+      });
+      await prisma.product.update({
+        where: { id },
+        data: { bookmarks: { increment: 1 } },
+      });
+    }
+  } catch (err) {
+    console.error("Error toggling bookmark:", err);
+  }
+}

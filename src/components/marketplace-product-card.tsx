@@ -1,34 +1,57 @@
-import { Product } from "@/types/types";
-// import { Heart } from "lucide-react";
-// import { Heart, Star } from "lucide-react";
+import { Product } from "@/lib/models/Product";
 import { motion } from "framer-motion";
+import { Bookmark, Star } from "lucide-react";
 import Image from "next/image";
-// import { GoogleAvatar } from "./google-avatar";
-import { Star } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardFooter } from "../ui/card";
-import { UserAvatar } from "../user-avatar";
+import { useEffect, useState } from "react";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter } from "./ui/card";
+import { UserAvatar } from "./user-avatar";
 
-export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
+export const MarketPlaceProductCard = ({
+  item,
+  isBookmarked,
+  toggleProductBookmark,
+}: {
+  item: Product;
+  isBookmarked: boolean;
+  toggleProductBookmark: (itemId: string) => void;
+}) => {
+  const [localIsBookmarked, setLocalIsBookmarked] = useState(isBookmarked);
+  useEffect(() => {
+    setLocalIsBookmarked(isBookmarked);
+  }, [isBookmarked]);
+  const localHandleBookmark = () => {
+    setLocalIsBookmarked(!localIsBookmarked);
+    toggleProductBookmark(item.id);
+  };
   return (
     <Card
       key={item.id}
-      className="group overflow-hidden py-0 gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all"
+      className="overflow-hidden py-0 gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all"
     >
       <div className="relative">
-        {/* <div className="absolute top-2 right-2 z-10">
+        {/* Bookmark overlay button */}
+        <div className="absolute top-2 right-2 z-10">
           <Button
             variant="ghost"
             size="icon"
-            className={`rounded-full bg-white/80 backdrop-blur-sm hover:bg-white ${
-              item.saved ? "text-pink-500" : "text-gray-600"
-            }`}
-            // onClick={() => toggleSave(item.id)}
+            className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-md"
+            onClick={localHandleBookmark}
+            aria-label={localIsBookmarked ? "Remove bookmark" : "Add bookmark"}
           >
-            <Heart className={`h-5 w-5 ${item.saved ? "fill-pink-500" : ""}`} />
+            <Bookmark
+              className={`h-5 w-5 transition-colors ${
+                localIsBookmarked
+                  ? "text-celestial-blue-600 fill-celestial-blue-600"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            />
           </Button>
-        </div> */}
+        </div>
+
+        {/* Product image */}
         <div className="aspect-square overflow-hidden">
           <motion.div layoutId={`product-image-${item.id}`}>
             <Image
@@ -41,6 +64,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           </motion.div>
         </div>
       </div>
+
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
@@ -77,6 +101,7 @@ export const MarketPlaceProductCard = ({ item }: { item: Product }) => {
           )}
         </div>
       </CardContent>
+
       <CardFooter className="p-0">
         <Link
           href={`/dashboard/marketplace/${item.id}`}
