@@ -36,6 +36,7 @@ export async function GET(req: Request) {
             condition && condition !== "Any" ? { condition } : {},
             { price: { gte: minPrice, lte: maxPrice } },
             { sellerId: { not: user?.sellerProfile?.id } },
+            { status: { not: "sold" } },
           ],
         },
         select: productSelect,
