@@ -111,6 +111,9 @@ export default function MarketplacePage() {
   };
 
   const filteredItems = items.filter((item) => item.status !== "sold");
+  const bookmarkedItems = filteredItems.filter((item) =>
+    bookmarkedIds.includes(item.id)
+  );
 
   return (
     <main className="flex-1 p-6">
@@ -365,10 +368,12 @@ export default function MarketplacePage() {
         )}
       </div>
 
-      <BookmarkedSection
-        items={filteredItems.filter((item) => bookmarkedIds.includes(item.id))}
-        onBookmark={handleBookmarkProduct}
-      />
+      {bookmarkedItems.length > 0 && (
+        <BookmarkedSection
+          items={bookmarkedItems}
+          onBookmark={handleBookmarkProduct}
+        />
+      )}
 
       <FeaturedSection
         items={[]}
