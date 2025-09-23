@@ -9,9 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
-import { getListingById } from "@/lib/store/marketplace";
-import { Product } from "@/types/types";
+import { Product } from "@/lib/models/Product";
+import { getListingById, toggleBookmarkListing } from "@/lib/store/marketplace";
 import {
+  Bookmark,
+  BookmarkCheck,
   Box,
   ChevronLeft,
   ChevronRight,
@@ -44,6 +46,8 @@ export default function ProductPage({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -58,6 +62,9 @@ export default function ProductPage({
         }
 
         setProduct(product);
+        if (session?.profile?.bookmarkedProducts?.includes(productId)) {
+          setIsBookmarked(true);
+        }
       } catch {
         console.error("Error loading the product");
         setProduct(null);
@@ -67,7 +74,20 @@ export default function ProductPage({
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, session]);
+
+  const handleToggleBookmark = async () => {
+    if (!productId) return;
+    setBookmarkLoading(true);
+    try {
+      await toggleBookmarkListing(productId);
+      setIsBookmarked((prev) => !prev);
+    } catch (err) {
+      console.error("Failed to toggle bookmark:", err);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -202,6 +222,24 @@ export default function ProductPage({
                 >
                   {product.availability}
                 </Badge> */}
+                {/* Bookmark button */}
+                {session && !isOwner && (
+                  <Button
+                    onClick={handleToggleBookmark}
+                    variant="outline"
+                    size="icon"
+                    disabled={bookmarkLoading}
+                    className="rounded-full"
+                  >
+                    {bookmarkLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : isBookmarked ? (
+                      <BookmarkCheck className="h-5 w-5 text-celestial-blue-500" />
+                    ) : (
+                      <Bookmark className="h-5 w-5" />
+                    )}
+                  </Button>
+                )}
               </div>
 
               {/* <div className="flex items-center gap-4 mb-4">

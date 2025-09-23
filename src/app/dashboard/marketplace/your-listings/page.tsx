@@ -37,11 +37,11 @@ import {
 } from "@/lib/store/marketplace";
 import { categories } from "@/types/types";
 import {
+  Bookmark,
   CheckCircle,
   DollarSign,
   Edit3,
   Eye,
-  Heart,
   MessageCircle,
   MoreHorizontal,
   Plus,
@@ -137,7 +137,7 @@ export default function YourListingsPage() {
     active: listings.filter((l) => l.status === "active").length,
     sold: listings.filter((l) => l.status === "sold").length,
     totalViews: listings.reduce((sum, l) => sum + l.views, 0),
-    totalLikes: listings.reduce((sum, l) => sum + l.likes, 0),
+    totalLikes: listings.reduce((sum, l) => sum + l.bookmarks, 0),
     totalEarnings: listings
       .filter((l) => l.status === "sold")
       .reduce((sum, l) => sum + l.price, 0),
@@ -222,9 +222,8 @@ export default function YourListingsPage() {
               <span>{listing.views}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Heart className="h-4 w-4" />
-              {/* <span>{listing.likes}</span> */}
-              <span>0</span>
+              <Bookmark className="h-4 w-4" />
+              <span>{listing.bookmarks}</span>
             </div>
             <div className="flex items-center gap-1">
               <MessageCircle className="h-4 w-4" />

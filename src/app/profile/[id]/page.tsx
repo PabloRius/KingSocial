@@ -1,16 +1,17 @@
 "use client";
 
-import { MarketPlaceProductCard } from "@/components/marketplace/marketplace-product-card";
+import { MarketPlaceProductCard } from "@/components/marketplace-product-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { User } from "@/lib/models/User";
+import { toggleBookmarkListing } from "@/lib/store/marketplace";
 import { getProfileByUsername } from "@/lib/store/profile";
-import { Loader2 } from "lucide-react";
+import { Loader2, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function ProfilePage({
   params,
@@ -29,20 +30,30 @@ export default function ProfilePage({
   const [profile, setProfile] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!username) return;
-    const fetchProfile = async () => {
-      try {
-        const fetchedProfile = await getProfileByUsername(username);
-        setProfile(fetchedProfile);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProfile();
+    try {
+      const fetchedProfile = await getProfileByUsername(username);
+      setProfile(fetchedProfile);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [username]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const handleBookmarkProduct = async (itemId: string) => {
+    try {
+      await toggleBookmarkListing(itemId);
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      fetchProfile();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,6 +81,11 @@ export default function ProfilePage({
       </div>
     );
   }
+
+  const activeListings =
+    profile.sellerProfile?.products.filter(
+      (product) => product.status !== "sold"
+    ) || [];
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-alice-blue-300 via-white to-celestial-blue-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 px-6">
@@ -190,29 +206,41 @@ export default function ProfilePage({
             >
               <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="listings">
-                  {/* Active Listings ({user.activeListings.length}) */}
-                  Active Listings
+                  Active Listings ({activeListings.length})
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="listings" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profile.sellerProfile?.products.map((item) => (
-                    <MarketPlaceProductCard key={item.id} item={item} />
-                  ))}
+                  {activeListings.map((item) => {
+                    const isOwner = profile.id === item.seller?.user.id;
+                    const productProps = {
+                      item,
+                      ...(!isOwner && {
+                        isBookmarked: profile.bookmarkedProducts.includes(
+                          item.id
+                        ),
+                        toggleProductBookmark: handleBookmarkProduct,
+                      }),
+                    };
+
+                    return (
+                      <MarketPlaceProductCard key={item.id} {...productProps} />
+                    );
+                  })}
                 </div>
-                {/* {user.activeListings.length === 0 && (
+                {activeListings.length === 0 && (
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">
                       No Active Listings
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {user.name} doesn&apos;t have any items for sale right
+                      {profile.name} doesn&apos;t have any items for sale right
                       now.
                     </p>
                   </div>
-                )} */}
+                )}
               </TabsContent>
             </Tabs>
           </div>

@@ -1,74 +1,40 @@
-import { useDebounce } from "@/hooks/useDebounce";
-import { Category, Condition, Product } from "@/types/types";
-import { ChevronDown, Loader2, Search } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Button } from "../ui/button";
+import { CollapsibleSection } from "@/components/collapsible-section";
+import { MarketPlaceProductCard } from "@/components/marketplace-product-card";
+import { Button } from "@/components/ui/button";
+import { Product } from "@/lib/models/Product";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { MarketPlaceProductCard } from "./marketplace-product-card";
+} from "@radix-ui/react-dropdown-menu";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 
-interface MarketPlaceItemsProps {
-  searchQuery: string;
-  selectedCategory: Category;
-  priceRange: [number, number];
-  condition: Condition;
-  emptyQuery: () => void;
-}
-
-export const MarketPlaceItems = ({
-  searchQuery,
-  selectedCategory,
-  priceRange,
-  condition,
+export function ItemsSection({
+  loading,
   emptyQuery,
-}: MarketPlaceItemsProps) => {
-  const [items, setItems] = useState<Product[]>([]);
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const limit = 12;
-
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
-      if (selectedCategory) params.append("category", selectedCategory);
-      if (condition) params.append("condition", condition);
-      if (priceRange[0] !== undefined)
-        params.append("minPrice", priceRange[0].toString());
-      if (priceRange[1] !== undefined)
-        params.append("maxPrice", priceRange[1].toString());
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
-
-      const res = await fetch(`/api/marketplace?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch products");
-
-      const data = await res.json();
-      setItems(data.products);
-      setTotalCount(data.totalCount);
-    } catch (err) {
-      console.error("Error fetching items", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [condition, priceRange, debouncedSearchQuery, selectedCategory, page]);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
-
+  items,
+  onBookmark,
+  bookmarkedIds,
+  page,
+  limit,
+  totalCount,
+  setPage,
+}: {
+  loading: boolean;
+  emptyQuery: () => void;
+  items: Product[];
+  onBookmark: (id: string) => void;
+  bookmarkedIds: string[];
+  page: number;
+  limit: number;
+  totalCount: number;
+  setPage: (page: number) => void;
+}) {
   return (
-    <div className="mb-10">
+    <CollapsibleSection title="🛒 All Listings" defaultOpen={false}>
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">{"All Items"}</h2>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="rounded-xl">
@@ -92,7 +58,12 @@ export const MarketPlaceItems = ({
         ) : items.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {items.map((item) => (
-              <MarketPlaceProductCard key={item.id} item={item} />
+              <MarketPlaceProductCard
+                key={item.id}
+                item={item}
+                isBookmarked={bookmarkedIds.includes(item.id) || false}
+                toggleProductBookmark={onBookmark}
+              />
             ))}
           </div>
         ) : (
@@ -121,7 +92,7 @@ export const MarketPlaceItems = ({
               variant="outline"
               size="icon"
               className="rounded-full w-8 h-8"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
             >
               &lt;
@@ -150,7 +121,7 @@ export const MarketPlaceItems = ({
               variant="outline"
               size="icon"
               className="rounded-full w-8 h-8"
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => setPage(page + 1)}
               disabled={page >= Math.ceil(totalCount / limit)}
             >
               &gt;
@@ -158,6 +129,6 @@ export const MarketPlaceItems = ({
           </div>
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
-};
+}

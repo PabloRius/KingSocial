@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { GetProfile } from "@/lib/actions/profile";
+import { productSelect } from "@/lib/models/Product";
 import prisma from "@/prisma";
-import { productSelect } from "@/types/types";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -36,6 +36,7 @@ export async function GET(req: Request) {
             condition && condition !== "Any" ? { condition } : {},
             { price: { gte: minPrice, lte: maxPrice } },
             { sellerId: { not: user?.sellerProfile?.id } },
+            { status: { not: "sold" } },
           ],
         },
         select: productSelect,

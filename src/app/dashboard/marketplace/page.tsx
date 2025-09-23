@@ -1,6 +1,5 @@
 "use client";
 
-import { MarketPlaceItems } from "@/components/marketplace/marketplace-items";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +22,9 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/context/session-context";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Product } from "@/lib/models/Product";
+import { toggleBookmarkListing } from "@/lib/store/marketplace";
 import { categories, Category, Condition, conditions } from "@/types/types";
 import {
   Box,
@@ -34,7 +36,10 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { BookmarkedSection } from "./bookmarked-section";
+import { FeaturedSection } from "./featured-section";
+import { ItemsSection } from "./items-section";
 
 export default function MarketplacePage() {
   const { session } = useSession();
@@ -46,6 +51,15 @@ export default function MarketplacePage() {
     useState<Category>("All Categories");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 3000]);
   const [condition, setCondition] = useState<Condition>("Any");
+  const [items, setItems] = useState<Product[]>([]);
+  const [bookmarkedIds, setBookmarkedIds] = useState(
+    session?.profile.bookmarkedProducts || []
+  );
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 12;
 
   const emptyQuery = () => {
     setSearchQuery("");
@@ -53,6 +67,53 @@ export default function MarketplacePage() {
     setCondition("Any");
     setPriceRange([0, 3000]);
   };
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (condition) params.append("condition", condition);
+      if (priceRange[0] !== undefined)
+        params.append("minPrice", priceRange[0].toString());
+      if (priceRange[1] !== undefined)
+        params.append("maxPrice", priceRange[1].toString());
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+
+      const res = await fetch(`/api/marketplace?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch products");
+
+      const data = await res.json();
+      setItems(data.products);
+      setTotalCount(data.totalCount);
+    } catch (err) {
+      console.error("Error fetching items", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [condition, priceRange, debouncedSearchQuery, selectedCategory, page]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const handleBookmarkProduct = async (itemId: string) => {
+    setBookmarkedIds((prev) => {
+      if (prev.includes(itemId)) {
+        return prev.filter((id) => id !== itemId);
+      } else {
+        return [...prev, itemId];
+      }
+    });
+    await toggleBookmarkListing(itemId);
+  };
+
+  const filteredItems = items.filter((item) => item.status !== "sold");
+  const bookmarkedItems = filteredItems.filter((item) =>
+    bookmarkedIds.includes(item.id)
+  );
 
   return (
     <main className="flex-1 p-6">
@@ -307,12 +368,29 @@ export default function MarketplacePage() {
         )}
       </div>
 
-      <MarketPlaceItems
-        condition={condition}
-        priceRange={priceRange}
-        searchQuery={searchQuery}
-        selectedCategory={selectedCategory}
+      {bookmarkedItems.length > 0 && (
+        <BookmarkedSection
+          items={bookmarkedItems}
+          onBookmark={handleBookmarkProduct}
+        />
+      )}
+
+      <FeaturedSection
+        items={[]}
+        onBookmark={handleBookmarkProduct}
+        bookmarkedIds={bookmarkedIds}
+      />
+
+      <ItemsSection
+        loading={loading}
         emptyQuery={emptyQuery}
+        items={filteredItems}
+        onBookmark={handleBookmarkProduct}
+        bookmarkedIds={bookmarkedIds}
+        page={page}
+        limit={limit}
+        totalCount={totalCount}
+        setPage={setPage}
       />
     </main>
   );

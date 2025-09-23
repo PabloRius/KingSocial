@@ -14,7 +14,7 @@ export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   status: true,
   views: true,
   createdAt: true,
-  likes: true,
+  bookmarks: true,
   soldAt: true,
 });
 
