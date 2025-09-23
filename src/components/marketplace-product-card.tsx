@@ -15,14 +15,15 @@ export const MarketPlaceProductCard = ({
   toggleProductBookmark,
 }: {
   item: Product;
-  isBookmarked: boolean;
-  toggleProductBookmark: (itemId: string) => void;
+  isBookmarked?: boolean;
+  toggleProductBookmark?: (itemId: string) => void;
 }) => {
   const [localIsBookmarked, setLocalIsBookmarked] = useState(isBookmarked);
   useEffect(() => {
     setLocalIsBookmarked(isBookmarked);
   }, [isBookmarked]);
   const localHandleBookmark = () => {
+    if (!toggleProductBookmark) return;
     setLocalIsBookmarked(!localIsBookmarked);
     toggleProductBookmark(item.id);
   };
@@ -33,23 +34,27 @@ export const MarketPlaceProductCard = ({
     >
       <div className="relative">
         {/* Bookmark overlay button */}
-        <div className="absolute top-2 right-2 z-10">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-md"
-            onClick={localHandleBookmark}
-            aria-label={localIsBookmarked ? "Remove bookmark" : "Add bookmark"}
-          >
-            <Bookmark
-              className={`h-5 w-5 transition-colors ${
-                localIsBookmarked
-                  ? "text-celestial-blue-600 fill-celestial-blue-600"
-                  : "text-gray-700 dark:text-gray-200"
-              }`}
-            />
-          </Button>
-        </div>
+        {!!toggleProductBookmark && (
+          <div className="absolute top-2 right-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white shadow-md"
+              onClick={localHandleBookmark}
+              aria-label={
+                localIsBookmarked ? "Remove bookmark" : "Add bookmark"
+              }
+            >
+              <Bookmark
+                className={`h-5 w-5 transition-colors ${
+                  localIsBookmarked
+                    ? "text-celestial-blue-600 fill-celestial-blue-600"
+                    : "text-gray-700 dark:text-gray-200"
+                }`}
+              />
+            </Button>
+          </div>
+        )}
 
         {/* Product image */}
         <div className="aspect-square overflow-hidden">

@@ -151,43 +151,73 @@ export async function toggleBookmarkListing(id: string): Promise<void> {
   }
 
   try {
+    // Fetch product's bookmark count and seller's userId
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: {
+        bookmarks: true,
+        seller: { select: { userId: true } },
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    const ownerId = product.seller?.userId;
+    if (ownerId === sessionUserId) {
+      // <-- requirement: throw if the user is the owner
+      throw new Error("You cannot bookmark your own listing");
+    }
+
+    // Fetch user's bookmarkedProducts (default to [] if null)
     const user = await prisma.user.findUnique({
       where: { id: sessionUserId },
       select: { bookmarkedProducts: true },
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-    const isBookmarked = user.bookmarkedProducts.includes(id);
+    const bookmarkedProducts = user.bookmarkedProducts ?? [];
+    const isBookmarked = bookmarkedProducts.includes(id);
 
     if (isBookmarked) {
-      // Remove bookmark
-      await prisma.user.update({
-        where: { id: sessionUserId },
-        data: {
-          bookmarkedProducts: {
-            set: user.bookmarkedProducts.filter((prodId) => prodId !== id),
+      // Remove bookmark (filter array) and decrement product bookmarks (but never below 0)
+      const newUserBookmarks = bookmarkedProducts.filter((pid) => pid !== id);
+      const newCount = Math.max(0, (product.bookmarks ?? 0) - 1);
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: sessionUserId },
+          data: {
+            // replace the array with the new filtered array
+            bookmarkedProducts: { set: newUserBookmarks },
           },
-        },
-      });
-      await prisma.product.update({
-        where: { id },
-        data: { bookmarks: { decrement: 1 } },
-      });
+        }),
+        prisma.product.update({
+          where: { id },
+          data: { bookmarks: { set: newCount } },
+        }),
+      ]);
     } else {
-      // Add bookmark
-      await prisma.user.update({
-        where: { id: sessionUserId },
-        data: {
-          bookmarkedProducts: { push: id },
-        },
-      });
-      await prisma.product.update({
-        where: { id },
-        data: { bookmarks: { increment: 1 } },
-      });
+      // Add bookmark and increment product bookmarks
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: sessionUserId },
+          data: {
+            bookmarkedProducts: { push: id },
+          },
+        }),
+        prisma.product.update({
+          where: { id },
+          data: { bookmarks: { increment: 1 } },
+        }),
+      ]);
     }
   } catch (err) {
     console.error("Error toggling bookmark:", err);
+    throw err;
   }
 }
