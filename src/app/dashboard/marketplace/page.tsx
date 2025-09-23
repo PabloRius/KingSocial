@@ -99,6 +99,8 @@ export default function MarketplacePage() {
     await toggleBookmarkListing(itemId);
   };
 
+  const filteredItems = items.filter((item) => item.status !== "sold");
+
   return (
     <main className="flex-1 p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -376,9 +378,9 @@ export default function MarketplacePage() {
             <div className="flex flex-1 justify-center">
               <Loader2 className="animate-spin" />
             </div>
-          ) : items.length > 0 ? (
+          ) : filteredItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <MarketPlaceProductCard
                   key={item.id}
                   item={item}
@@ -409,7 +411,7 @@ export default function MarketplacePage() {
         </div>
 
         {/* Pagination */}
-        {items.length > 0 && (
+        {filteredItems.length > 0 && (
           <div className="flex justify-center mt-8">
             <div className="flex items-center gap-1">
               <Button
