@@ -262,8 +262,8 @@ export default function ProfilePage() {
               <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
                 <div className="relative group">
                   <UserAvatar
-                    avatarUrl={session.profile.image || undefined}
-                    name={session.profile.name || ""}
+                    avatarUrl={imagesData.image || undefined}
+                    name={formData.name || ""}
                     className="text-3xl h-32 w-32"
                   />
                   {isEditing && (
@@ -350,12 +350,14 @@ export default function ProfilePage() {
                 </Button>
               </div>
             )}
-            <Button variant="outline" asChild>
-              <Link href={`/profile/${session.profile.username}`}>
-                <Eye className="mr-2 h-4 w-4" />
-                View Public Profile
-              </Link>
-            </Button>
+            {!isEditing && (
+              <Button variant="outline" asChild>
+                <Link href={`/profile/${session.profile.username}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Public Profile
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
