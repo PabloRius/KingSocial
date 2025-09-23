@@ -237,6 +237,9 @@ export default function ProfilePage() {
               />
             )}
 
+            {/* Dark gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+
             {isEditing && (
               <>
                 <input
@@ -250,7 +253,7 @@ export default function ProfilePage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="absolute top-4 right-4 transition-opacity"
+                  className="absolute top-4 right-4 transition-opacity z-100"
                   onClick={() => coverInputRef.current?.click()}
                 >
                   <Camera className="mr-2 h-4 w-4" />
@@ -258,13 +261,16 @@ export default function ProfilePage() {
                 </Button>
               </>
             )}
-            <div className="absolute top-1/2 -translate-y-1/2 px-6">
-              <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
+
+            {/* Content Overlay */}
+            <div className="absolute inset-0 flex flex-col justify-center items-start text-center px-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Avatar */}
                 <div className="relative group">
                   <UserAvatar
                     avatarUrl={imagesData.image || undefined}
                     name={formData.name || ""}
-                    className="text-3xl h-32 w-32"
+                    className="text-3xl h-32 w-32 ring-4 ring-white dark:ring-gray-800"
                   />
                   {isEditing && (
                     <>
@@ -288,43 +294,37 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h1 className="text-3xl font-bold">
-                          {session.profile.name}
-                        </h1>
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        @{session.profile.username}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">
-                            {currentUser.stats.rating}
-                          </span>
-                          <span>({currentUser.stats.reviewCount} reviews)</span>
-                        </div>
-                        <span>•</span>
-                        <span>
-                          Joined{" "}
-                          {new Date(session.profile.createdAt).toLocaleString(
-                            "en-US",
-                            {
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}
-                        </span>
-                      </div>
+                {/* Profile Info */}
+                <div className="flex-1 min-w-0 text-white drop-shadow-lg text-left">
+                  <h1 className="text-3xl font-bold">{session.profile.name}</h1>
+                  <p className="text-gray-200 mb-2">
+                    @{session.profile.username}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-200">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">
+                        {currentUser.stats.rating}
+                      </span>
+                      <span>({currentUser.stats.reviewCount} reviews)</span>
                     </div>
+                    <span>•</span>
+                    <span>
+                      Joined{" "}
+                      {new Date(session.profile.createdAt).toLocaleString(
+                        "en-US",
+                        {
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+
           <div className="flex gap-3 mt-8">
             {!isEditing ? (
               <Button
