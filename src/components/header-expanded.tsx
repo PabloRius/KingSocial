@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "@/context/session-context";
 import { Bell, MessageSquare } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { UserDropdown } from "./user-dropdown";
@@ -8,7 +9,6 @@ import { UserDropdown } from "./user-dropdown";
 export const HeaderExpanded = () => {
   const { session } = useSession();
   if (!session?.profile) return;
-  const { sellerProfile } = session.profile;
   const alerts = 0;
   const messages = 0;
   return (
@@ -25,7 +25,8 @@ export const HeaderExpanded = () => {
           </Badge>
         )}
       </Button>
-      {sellerProfile && (
+
+      <Link href="/dashboard/inbox">
         <Button
           variant="ghost"
           size="icon"
@@ -38,7 +39,8 @@ export const HeaderExpanded = () => {
             </Badge>
           )}
         </Button>
-      )}
+      </Link>
+
       <div className="relative group">
         <UserDropdown />
       </div>

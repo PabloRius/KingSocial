@@ -6,7 +6,7 @@ import { HeaderExpanded } from "./header-expanded";
 export const Header = () => {
   const { session } = useSession();
   return (
-    <header className="relative border-b flex flex-row justify-between items-center py-6">
+    <header className="relative border-b flex flex-row justify-between items-center py-6 h-[100px]">
       <div
         className={`relative ${
           !session?.profile ? "left-[50%] translate-x-[-50%]" : "left-6"
