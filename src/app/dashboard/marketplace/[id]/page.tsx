@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { Product } from "@/lib/models/Product";
+import { sendMessageWithFallback } from "@/lib/store/chat";
 import { getListingById, toggleBookmarkListing } from "@/lib/store/marketplace";
 import {
   Bookmark,
@@ -20,6 +22,7 @@ import {
   Loader2,
   MapPin,
   MessageCircle,
+  Send,
   Star,
   User,
 } from "lucide-react";
@@ -48,6 +51,9 @@ export default function ProductPage({
   const [loading, setLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -129,7 +135,21 @@ export default function ProductPage({
 
   const handleMessageSeller = () => {
     if (!product.seller) return;
-    alert(`Opening message thread with ${product.seller.user.name}...`);
+    setShowMessageForm(true);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product.seller || !session?.profile) return;
+    if (message.trim()) {
+      sendMessageWithFallback({
+        content: message,
+        senderId: session?.profile.id,
+        receiverId: product.seller.user.id,
+      });
+
+      redirect(`/dashboard/inbox?chat=${product.seller.user.id}`);
+    }
   };
 
   const isOwner = session?.profile?.id === product.seller?.user.id;
@@ -289,23 +309,56 @@ export default function ProductPage({
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button
-                onClick={
-                  isOwner
-                    ? () => {
-                        redirect(`edit-listing/${productId}`);
-                      }
-                    : handleMessageSeller
-                }
-                className="w-full h-12 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white rounded-xl font-medium"
-              >
-                {isOwner ? (
-                  <Box className="mr-2 h-5 w-5" />
-                ) : (
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                )}
-                {isOwner ? "Edit Listing" : "Message Seller"}
-              </Button>
+              {!showMessageForm ? (
+                <Button
+                  onClick={
+                    isOwner
+                      ? () => {
+                          redirect(`edit-listing/${productId}`);
+                        }
+                      : handleMessageSeller
+                  }
+                  className="w-full h-12 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 text-white rounded-xl font-medium"
+                >
+                  {isOwner ? (
+                    <Box className="mr-2 h-5 w-5" />
+                  ) : (
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                  )}
+                  {isOwner ? "Edit Listing" : "Message Seller"}
+                </Button>
+              ) : (
+                <form onSubmit={handleSendMessage} className="space-y-3">
+                  <div className="relative">
+                    <Input
+                      placeholder="Type your message to the seller..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="pr-12 h-12 rounded-xl"
+                      autoFocus
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="absolute right-1 top-1 h-10 w-10 bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 hover:to-picton-blue-600 rounded-lg"
+                      disabled={!message.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full rounded-xl bg-transparent"
+                    onClick={() => {
+                      setShowMessageForm(false);
+                      setMessage("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </form>
+              )}
             </div>
 
             {/* Seller Info */}
