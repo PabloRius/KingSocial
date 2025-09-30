@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "@/context/session-context";
 import { Chat } from "@/lib/models/Chat";
-import { getChatsFromUserId } from "@/lib/store/chat";
+import { getChatsFromUserId, sendMessage } from "@/lib/store/chat";
 import { format, isToday, isYesterday } from "date-fns";
 import {
   ArrowLeft,
@@ -78,8 +78,13 @@ export default function InboxPage() {
   );
 
   const handleSendMessage = () => {
+    if (!session?.profile || !selectedChatData) return;
     if (message.trim()) {
-      console.log("Sending message:", message);
+      sendMessage({
+        content: message,
+        senderId: session?.profile.id,
+        chatId: selectedChatData?.id,
+      });
       setMessage("");
     }
   };
@@ -363,7 +368,7 @@ export default function InboxPage() {
                     placeholder="Type a message..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         handleSendMessage();
                       }
