@@ -111,6 +111,7 @@ model Product {
   status          String          @default("active")
   views           Int             @default(0)
   bookmarks       Int             @default(0)
+  references      Message[]
   
   seller          SellerProfile?  @relation(fields: [sellerId], references: [id], onDelete: SetNull)
   sellerId        String?         @db.ObjectId
@@ -120,14 +121,17 @@ model Product {
 }
 
 model Message {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId    String   @db.ObjectId
-  senderId  String   @db.ObjectId
-  content   String
-  createdAt DateTime @default(now())
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId        String   @db.ObjectId
+  senderId      String   @db.ObjectId
+  content       String
+  createdAt     DateTime @default(now())
+  
+  productRefId  String?    @db.ObjectId
+  productRef    Product?  @relation(fields: [productRefId], references: [id])
 
-  chat      Chat     @relation(fields: [chatId], references: [id])
-  sender    User     @relation(fields: [senderId], references: [id])
+  chat          Chat     @relation(fields: [chatId], references: [id])
+  sender        User     @relation(fields: [senderId], references: [id])
 }
 
 model ChatParticipant {

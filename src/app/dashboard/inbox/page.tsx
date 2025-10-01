@@ -10,12 +10,15 @@ import { getChatsFromUserId, sendMessage } from "@/lib/store/chat";
 import { format, isToday, isYesterday } from "date-fns";
 import {
   ArrowLeft,
+  ExternalLink,
   Loader2,
   MoreVertical,
   Search,
   Send,
   Smile,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -366,6 +369,38 @@ export default function InboxPage() {
                               : "bg-white text-gray-900 rounded-bl-none shadow-sm"
                           }`}
                         >
+                          {/* Product Reference Card */}
+                          {msg.productRef && (
+                            <Link
+                              href={`/dashboard/marketplace/${msg.productRef.id}`}
+                              className="block mb-2 p-3 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
+                                  <Image
+                                    src={msg.productRef.photos[0]}
+                                    alt={msg.productRef.name}
+                                    width={64}
+                                    height={64}
+                                    className="object-cover w-full h-full"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                                      {msg.productRef.name}
+                                    </h4>
+                                    <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
+                                  </div>
+                                  <p className="text-lg font-bold text-blue-600 mt-1">
+                                    ${msg.productRef.price}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
+
+                          {/* Message Bubble */}
                           <p className="text-sm">{msg.content}</p>
                           <p
                             className={`text-xs mt-1 ${

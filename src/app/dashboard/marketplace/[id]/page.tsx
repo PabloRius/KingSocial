@@ -146,6 +146,7 @@ export default function ProductPage({
         content: message,
         senderId: session?.profile.id,
         receiverId: product.seller.user.id,
+        productRefId: product.id,
       });
 
       redirect(`/dashboard/inbox?chat=${product.seller.user.id}`);

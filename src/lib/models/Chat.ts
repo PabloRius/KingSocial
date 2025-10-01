@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { productSelect } from "./Product";
 
 export const messageSelect = Prisma.validator<Prisma.MessageSelect>()({
   id: true,
@@ -6,6 +7,7 @@ export const messageSelect = Prisma.validator<Prisma.MessageSelect>()({
   content: true,
   senderId: true,
   createdAt: true,
+  productRef: { select: productSelect },
 });
 
 export type Message = Prisma.MessageGetPayload<{
@@ -23,6 +25,7 @@ export type PartialMessageCreatePayload = {
   senderId: string;
   chatId?: string;
   receiverId?: string;
+  productRefId?: string;
 };
 
 export const chatSelect = Prisma.validator<Prisma.ChatSelect>()({

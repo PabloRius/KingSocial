@@ -7,6 +7,7 @@ import {
   chatSelect,
   Message,
   MessageCreatePayload,
+  messageSelect,
   PartialMessageCreatePayload,
 } from "../models/Chat";
 
@@ -80,6 +81,7 @@ export async function sendMessage(
         sender: { connect: { id: message.senderId } },
         chat: { connect: { id: message.chatId } },
       },
+      select: messageSelect,
     });
     return newMessage;
   } catch (error) {
@@ -136,6 +138,9 @@ export async function sendMessageWithFallback(
         content: message.content,
         sender: { connect: { id: message.senderId } },
         chat: { connect: { id: chatId } },
+        ...(message.productRefId && {
+          productRef: { connect: { id: message.productRefId } },
+        }),
       },
     });
   } catch (error) {
