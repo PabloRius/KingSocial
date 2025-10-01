@@ -346,7 +346,10 @@ export default function MarketplacePage() {
               {!loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {itemRelations[tab].map((product) => (
-                    <Link key={product.id} href={`/marketplace/${product.id}`}>
+                    <Link
+                      key={product.id}
+                      href={`/dashboard/marketplace/${product.id}`}
+                    >
                       <Card className="group overflow-hidden border-blue-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 pb-0">
                         <CardContent className="p-0">
                           {/* Product Image */}
