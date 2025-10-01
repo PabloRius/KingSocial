@@ -27,12 +27,12 @@ import { Product } from "@/lib/models/Product";
 import { toggleBookmarkListing } from "@/lib/store/marketplace";
 import { categories, Category, Condition, conditions } from "@/types/types";
 import {
-  Box,
   Check,
   ChevronDown,
   Filter,
+  Package,
+  Plus,
   Search,
-  ShoppingBag,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -117,36 +117,42 @@ export default function MarketplacePage() {
 
   return (
     <main className="flex-1 p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Marketplace 🛍️</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Find, buy, sell, and trade with other students
-          </p>
-        </div>
-        <div className="flex flex-row gap-4">
-          <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
+      {/* Hero Section */}
+      <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white shadow-xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Discover Amazing Items</h2>
+            <p className="text-blue-100">
+              Buy and sell with confidence in our trusted marketplace
+            </p>
+          </div>
+          <div className="flex gap-3">
             <Link
               href={
                 sellerProfile ? "marketplace/sell" : "marketplace/select-plan"
               }
-              className="flex flex-row items-center"
             >
-              <ShoppingBag className="mr-2 h-4 w-4" />
-              {sellerProfile ? "Sell Something" : "Start Selling"}
-            </Link>
-          </Button>
-          {sellerProfile && (
-            <Button className="cursor-pointer bg-gradient-to-r from-celestial-blue-500 to-picton-blue-500 hover:from-celestial-blue-600 text-white rounded-xl shadow-md hover:shadow-xl transition-all">
-              <Link
-                href="marketplace/your-listings"
-                className="flex flex-row items-center"
+              <Button
+                size="lg"
+                className="bg-white text-blue-600 hover:bg-blue-50 font-semibold shadow-lg"
               >
-                <Box className="mr-2 h-4 w-4" />
-                Your listings
+                <Plus className="mr-2 h-5 w-5" />
+                Sell Something
+              </Button>
+            </Link>
+            {sellerProfile && (
+              <Link href="/marketplace/your-listings">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10 font-semibold bg-transparent"
+                >
+                  <Package className="mr-2 h-5 w-5" />
+                  Your Listings
+                </Button>
               </Link>
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
