@@ -8,7 +8,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { User } from "@/lib/models/User";
 import { toggleBookmarkListing } from "@/lib/store/marketplace";
 import { getProfileByUsername } from "@/lib/store/profile";
-import { Loader2, Package } from "lucide-react";
+import { Loader2, Package, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -103,32 +103,42 @@ export default function ProfilePage({
                 className="object-cover w-full h-full"
               />
             )}
-            <div className="absolute top-1/2 -translate-y-1/2 px-6">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+
+            {/* Dark gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+
+            {/* Content Overlay */}
+            <div className="absolute inset-0 flex flex-col justify-center items-start text-center px-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Avatar */}
                 <div className="relative group">
                   <UserAvatar
                     avatarUrl={profile.image || undefined}
                     name={profile.name || ""}
-                    className="text-3xl w-32 h-32"
+                    className="text-3xl h-32 w-32 ring-4 ring-white dark:ring-gray-800"
                   />
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h1 className="text-3xl font-bold">{profile.name}</h1>
-                        {/* {profile.verified && (
-                          <Shield
-                            className="h-6 w-6 text-celestial-blue-500"
-                            fill="currentColor"
-                          />
-                        )} */}
-                      </div>
-                      <p className="text-gray-600 dark:text-gray-400 mb-2">
-                        @{profile.username}
-                      </p>
+                {/* Profile Info */}
+                <div className="flex-1 min-w-0 text-white drop-shadow-lg text-left">
+                  <h1 className="text-3xl font-bold">{profile.name}</h1>
+                  <p className="text-gray-200 mb-2">@{profile.username}</p>
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-200">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">
+                        {profile.sellerProfile?.rating}
+                      </span>
+                      <span>({100} reviews)</span>
                     </div>
+                    <span>•</span>
+                    <span>
+                      Joined{" "}
+                      {new Date(profile.createdAt).toLocaleString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
