@@ -51,7 +51,7 @@ function formatChatTimestamp(date: Date): string {
 export default function InboxPage() {
   const { session, loading } = useSession();
   const [selectedChat, setSelectedChat] = useState<string | null>("a");
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useState<Chat[] | undefined>(undefined);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -76,13 +76,21 @@ export default function InboxPage() {
     fetchChats();
   }, [fetchChats]);
 
-  const selectedChatData = chats.find((chat) => chat.id === selectedChat);
+  const selectedChatData = chats?.find((chat) => chat.id === selectedChat);
 
   useEffect(() => {
     if (selectedChatData?.messages) {
       scrollToBottom();
     }
   }, [selectedChatData?.messages]);
+
+  if (chats === undefined) {
+    return (
+      <div className="flex h-full w-full flex-1 items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
 
   const filteredChats = chats.filter((chat) =>
     chat.participants.some(
@@ -104,7 +112,7 @@ export default function InboxPage() {
       if (newMessage) {
         setMessage("");
         setChats((prevChats) =>
-          prevChats.map((chat) =>
+          prevChats!.map((chat) =>
             chat.id === selectedChatData.id
               ? { ...chat, messages: [...chat.messages, newMessage] }
               : chat
@@ -125,7 +133,7 @@ export default function InboxPage() {
 
   if (loading) {
     return (
-      <div className="h-full w-full flex-1">
+      <div className="flex h-full w-full flex-1 items-center justify-center">
         <Loader2 className="animate-spin" />
       </div>
     );
