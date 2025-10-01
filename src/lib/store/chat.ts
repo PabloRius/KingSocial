@@ -5,6 +5,7 @@ import prisma from "@/prisma";
 import {
   Chat,
   chatSelect,
+  Message,
   MessageCreatePayload,
   PartialMessageCreatePayload,
 } from "../models/Chat";
@@ -56,7 +57,6 @@ export async function getChatsFromUserId(id: string): Promise<Array<Chat>> {
     if (!user) throw new Error("Unauthorized");
     const { chats } = user;
     const flattenedChats = chats.map((chat) => chat.chat);
-    console.log(flattenedChats);
     return flattenedChats;
   } catch (error) {
     console.error(error);
@@ -66,7 +66,7 @@ export async function getChatsFromUserId(id: string): Promise<Array<Chat>> {
 
 export async function sendMessage(
   message: MessageCreatePayload
-): Promise<void> {
+): Promise<Message | null> {
   const session = await auth();
   const sessionUserId = session?.user?.id;
   if (!sessionUserId || sessionUserId !== message.senderId) {
@@ -74,15 +74,17 @@ export async function sendMessage(
   }
 
   try {
-    await prisma.message.create({
+    const newMessage = await prisma.message.create({
       data: {
         content: message.content,
         sender: { connect: { id: message.senderId } },
         chat: { connect: { id: message.chatId } },
       },
     });
+    return newMessage;
   } catch (error) {
     console.error(error);
+    return null;
   }
 }
 

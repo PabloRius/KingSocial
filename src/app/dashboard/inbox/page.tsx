@@ -77,15 +77,21 @@ export default function InboxPage() {
     )
   );
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!session?.profile || !selectedChatData) return;
     if (message.trim()) {
-      sendMessage({
+      const newMessage = await sendMessage({
         content: message,
         senderId: session?.profile.id,
         chatId: selectedChatData?.id,
       });
-      setMessage("");
+
+      if (newMessage) {
+        setMessage("");
+        selectedChatData.messages.push(newMessage);
+      } else {
+        alert("Error sending the message, try again later");
+      }
     }
   };
 
