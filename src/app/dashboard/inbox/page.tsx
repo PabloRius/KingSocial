@@ -17,7 +17,7 @@ import {
   Smile,
 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 function formatChatTimestamp(date: Date): string {
   const now = new Date();
@@ -53,6 +53,12 @@ export default function InboxPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchChats = useCallback(async () => {
     try {
       if (!session?.profile.id) return;
@@ -68,6 +74,12 @@ export default function InboxPage() {
   }, [fetchChats]);
 
   const selectedChatData = chats.find((chat) => chat.id === selectedChat);
+
+  useEffect(() => {
+    if (selectedChatData?.messages) {
+      scrollToBottom();
+    }
+  }, [selectedChatData?.messages]);
 
   const filteredChats = chats.filter((chat) =>
     chat.participants.some(
@@ -88,7 +100,13 @@ export default function InboxPage() {
 
       if (newMessage) {
         setMessage("");
-        selectedChatData.messages.push(newMessage);
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === selectedChatData.id
+              ? { ...chat, messages: [...chat.messages, newMessage] }
+              : chat
+          )
+        );
       } else {
         alert("Error sending the message, try again later");
       }
@@ -363,6 +381,7 @@ export default function InboxPage() {
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
