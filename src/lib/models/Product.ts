@@ -16,6 +16,7 @@ export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   createdAt: true,
   bookmarks: true,
   soldAt: true,
+  references: true,
 });
 
 export type Product = Prisma.ProductGetPayload<{

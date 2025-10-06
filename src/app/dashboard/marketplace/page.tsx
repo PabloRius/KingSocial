@@ -161,7 +161,7 @@ export default function MarketplacePage() {
               </Button>
             </Link>
             {sellerProfile && (
-              <Link href="/marketplace/your-listings">
+              <Link href="/dashboard/marketplace/your-listings">
                 <Button
                   size="lg"
                   variant="outline"
