@@ -51,6 +51,7 @@ import {
   MoreVertical,
   Package,
   Plus,
+  RotateCcw,
   Search,
   Trash2,
   TrendingUp,
@@ -170,8 +171,8 @@ export default function YourListingsPage() {
 
   const ListingCard = ({ listing }: { listing: Product }) => (
     <Link href={`/dashboard/marketplace/${listing.id}`}>
-      <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-blue-200 pb-0">
-        <div className="relative">
+      <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-blue-200 pb-0 h-full">
+        <div className="relative flex flex-col h-full">
           <div className="aspect-square overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
             <Image
               src={listing.photos[0] || "/placeholder.png"}
@@ -206,7 +207,11 @@ export default function YourListingsPage() {
               )}
             </Badge>
           </div>
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -217,34 +222,67 @@ export default function YourListingsPage() {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() =>
-                    redirect(`dashboard/marketplace/edit-listing/${listing.id}`)
-                  }
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Listing
-                </DropdownMenuItem>
+
+              <DropdownMenuContent
+                align="end"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 {listing.status === "active" && (
-                  <DropdownMenuItem
-                    onClick={() => handleMarkAsSold(listing.id)}
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark as Sold
+                  <DropdownMenuItem asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => redirect(`edit-listing/${listing.id}`)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Listing
+                    </Button>
                   </DropdownMenuItem>
                 )}
+
+                {listing.status === "active" && (
+                  <DropdownMenuItem asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => handleMarkAsSold(listing.id)}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Mark as Sold
+                    </Button>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      redirect(`sell?resellId=${listing.id}`);
+                    }}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Re-Sell
+                  </Button>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => handleDelete(listing)}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleDelete(listing)}
+                    className="w-full justify-start text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
           <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-lg">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-3">
@@ -267,10 +305,10 @@ export default function YourListingsPage() {
           </div>
         </div>
 
-        <CardContent className="p-4">
+        <CardContent className="p-4 flex flex-col justify-between flex-grow">
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-bold text-lg line-clamp-1 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-bold text-lg line-clamp-1 group-hover:text-blue-600 transition-colors leading-tight min-h-[1.75rem]">
                 {listing.name}
               </h3>
               <div className="text-right flex-shrink-0">
@@ -280,11 +318,11 @@ export default function YourListingsPage() {
               </div>
             </div>
 
-            <p className="text-gray-600 text-sm line-clamp-2">
+            <p className="text-gray-600 text-sm line-clamp-2 min-h-[2.5rem]">
               {listing.description}
             </p>
 
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-auto">
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>Posted {formatDate(listing.createdAt)}</span>

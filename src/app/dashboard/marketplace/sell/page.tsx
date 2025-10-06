@@ -21,10 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getListingById } from "@/lib/store/marketplace";
 import { categories, labelledConditions } from "@/types/types";
 import { Camera, Plus, PoundSterling, Tag, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -32,16 +34,47 @@ export default function SellPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    price: "",
+    price: 0,
     category: "",
     condition: "",
     location: "",
     tags: [] as string[],
   });
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{ src: string; isNew: boolean }[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [currentTag, setCurrentTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const searchParams = useSearchParams();
+  const resellId = searchParams.get("resellId");
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      if (!resellId) return;
+
+      try {
+        const product = await getListingById(resellId);
+        if (!product) throw new Error("Failed to fetch product data");
+
+        setFormData({
+          title: product.name,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          condition: product.condition,
+          location: product.pickupLocation,
+          tags: product.tags,
+        });
+
+        if (product.photos && product.photos.length > 0) {
+          setImages(product.photos.map((url) => ({ src: url, isNew: false })));
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProductData();
+  }, [resellId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -67,13 +100,21 @@ export default function SellPage() {
       return;
     }
 
-    const filePreviews = validFiles.map((file) => URL.createObjectURL(file));
+    const filePreviews = validFiles.map((file) => ({
+      src: URL.createObjectURL(file),
+      isNew: true,
+    }));
+
     setImageFiles((prev) => [...prev, ...validFiles]);
     setImages((prev) => [...prev, ...filePreviews]);
   };
 
   const removeImage = (index: number) => {
+    const removed = images[index];
     setImages((prev) => prev.filter((_, i) => i !== index));
+    if (removed.isNew) {
+      setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   const addTag = () => {
@@ -104,15 +145,35 @@ export default function SellPage() {
     const data = new FormData();
     data.append("title", formData.title);
     data.append("description", formData.description);
-    data.append("price", formData.price);
+    data.append("price", formData.price.toString());
     data.append("category", formData.category);
     data.append("condition", formData.condition);
     data.append("location", formData.location);
     formData.tags.forEach((tag) => data.append("tags", tag));
 
-    imageFiles.forEach((file) => data.append("images", file));
-
     try {
+      const existingUrlFiles = await Promise.all(
+        images
+          .filter((img) => !img.isNew)
+          .map(async (img, i) => {
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            const ext = blob.type.split("/")[1] || "jpg";
+            return new File([blob], `resell-image-${i}.${ext}`, {
+              type: blob.type,
+            });
+          })
+      );
+
+      const allFiles = [...existingUrlFiles, ...imageFiles];
+
+      if (allFiles.length === 0) {
+        alert("Please upload at least one image.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      allFiles.forEach((file) => data.append("images", file));
       const res = await fetch("/api/sell", {
         method: "POST",
         body: data,
@@ -149,9 +210,13 @@ export default function SellPage() {
       <main className="flex-1 container py-8 px-4 mx-auto">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Create New Listing</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              {resellId ? "Re-Sell Item" : "Create New Listing"}
+            </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Fill out the details below to list your item on the marketplace
+              {resellId
+                ? "This form is pre-filled with your previous listing details."
+                : "Fill out the details below to list your item on the marketplace"}
             </p>
           </div>
 
@@ -173,7 +238,7 @@ export default function SellPage() {
                   {images.map((image, index) => (
                     <div key={index} className="relative aspect-square">
                       <Image
-                        src={image || "/placeholder.svg"}
+                        src={image.src || "/placeholder.png"}
                         alt={`Upload ${index + 1}`}
                         width={200}
                         height={200}
