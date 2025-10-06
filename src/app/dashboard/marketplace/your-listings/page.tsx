@@ -43,7 +43,6 @@ import {
   Calendar,
   CheckCircle,
   Crown,
-  DollarSign,
   Edit,
   Eye,
   Loader2,
@@ -51,6 +50,7 @@ import {
   MoreVertical,
   Package,
   Plus,
+  PoundSterling,
   RotateCcw,
   Search,
   Trash2,
@@ -418,7 +418,7 @@ export default function YourListingsPage() {
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-white" />
+                  <PoundSterling className="h-5 w-5 text-white" />
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-blue-500" />
               </div>
@@ -524,7 +524,7 @@ export default function YourListingsPage() {
             value="sold"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white"
           >
-            <DollarSign className="h-4 w-4 mr-2" />
+            <PoundSterling className="h-4 w-4 mr-2" />
             Sold ({soldListings.length})
           </TabsTrigger>
         </TabsList>
@@ -577,7 +577,7 @@ export default function YourListingsPage() {
           ) : (
             <Card className="p-12 text-center border-dashed border-2 border-gray-300">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 mb-4">
-                <DollarSign className="h-8 w-8 text-white" />
+                <PoundSterling className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-bold mb-2">No Sold Items Yet</h3>
               <p className="text-gray-600 max-w-md mx-auto">
