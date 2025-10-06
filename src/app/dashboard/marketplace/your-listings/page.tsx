@@ -255,8 +255,9 @@ export default function YourListingsPage() {
               </div>
               <div className="flex items-center gap-1 text-gray-700">
                 <MessageCircle className="h-4 w-4 text-green-500" />
-                {/* <span className="font-semibold">{listing.messages}</span> */}
-                <span className="font-semibold">{0}</span>
+                <span className="font-semibold">
+                  {listing.references.length || 0}
+                </span>
               </div>
             </div>
           </div>
