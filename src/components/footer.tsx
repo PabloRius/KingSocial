@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export const Footer = () => {
   return (
-    <footer className="border-t">
+    <footer className="border-t h-[136px] md:h-[100px]">
       <div className="container py-6 mx-auto">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-muted-foreground">
+        <div className="grid md:flex grid-cols-2 text-center md:flex-row justify-center items-center gap-4 text-sm text-muted-foreground">
           <Link href="/about" className="hover:underline">
             About Us
           </Link>

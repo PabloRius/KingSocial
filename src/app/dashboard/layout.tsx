@@ -1,5 +1,6 @@
 "use client";
 
+import { Header } from "@/components/header";
 import { useSession } from "@/context/session-context";
 import { Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -18,5 +19,10 @@ export default function Dashboardayout({
     redirect("/");
   }
 
-  return children;
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
 }
