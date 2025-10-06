@@ -221,3 +221,38 @@ export async function toggleBookmarkListing(id: string): Promise<void> {
     throw err;
   }
 }
+
+export async function increaseViews(id: string): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) {
+      throw new Error("Unauthorized");
+    }
+    const sellerProfile = await prisma.sellerProfile.findUnique({
+      where: { userId: sessionUserId },
+    });
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      select: { sellerId: true },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    if (product.sellerId === sellerProfile?.id) {
+      return false;
+    }
+
+    await prisma.product.update({
+      where: { id },
+      data: { views: { increment: 1 } },
+    });
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}

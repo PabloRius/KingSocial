@@ -169,132 +169,136 @@ export default function YourListingsPage() {
   };
 
   const ListingCard = ({ listing }: { listing: Product }) => (
-    <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-blue-200 pb-0">
-      <div className="relative">
-        <div className="aspect-square overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
-          <Image
-            src={listing.photos[0] || "/placeholder.png"}
-            alt={listing.name}
-            width={300}
-            height={300}
-            className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-          />
-        </div>
-        <div className="absolute top-3 left-3">
-          <Badge
-            variant={listing.status === "active" ? "default" : "secondary"}
-            className={`${
-              listing.status === "active"
-                ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-            } text-white shadow-lg`}
-          >
-            {listing.status === "active" ? (
-              <>
-                <span className="relative flex h-2 w-2 mr-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                </span>
-                Active
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Sold
-              </>
-            )}
-          </Badge>
-        </div>
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-9 w-9 bg-white/90 backdrop-blur-sm shadow-lg"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  redirect(`dashboard/marketplace/edit-listing/${listing.id}`)
-                }
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Listing
-              </DropdownMenuItem>
-              {listing.status === "active" && (
-                <DropdownMenuItem onClick={() => handleMarkAsSold(listing.id)}>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Mark as Sold
-                </DropdownMenuItem>
+    <Link href={`/dashboard/marketplace/${listing.id}`}>
+      <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-blue-200 pb-0">
+        <div className="relative">
+          <div className="aspect-square overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+            <Image
+              src={listing.photos[0] || "/placeholder.png"}
+              alt={listing.name}
+              width={300}
+              height={300}
+              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div className="absolute top-3 left-3">
+            <Badge
+              variant={listing.status === "active" ? "default" : "secondary"}
+              className={`${
+                listing.status === "active"
+                  ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              } text-white shadow-lg`}
+            >
+              {listing.status === "active" ? (
+                <>
+                  <span className="relative flex h-2 w-2 mr-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                  </span>
+                  Active
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Sold
+                </>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleDelete(listing)}
-                className="text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-lg">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-gray-700">
-                <Eye className="h-4 w-4 text-blue-500" />
-                <span className="font-semibold">{listing.views}</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-700">
-                <Bookmark className="h-4 w-4 text-red-500" />
-                <span className="font-semibold">{listing.bookmarks}</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-700">
-                <MessageCircle className="h-4 w-4 text-green-500" />
-                <span className="font-semibold">
-                  {listing.references.length || 0}
-                </span>
+            </Badge>
+          </div>
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-9 w-9 bg-white/90 backdrop-blur-sm shadow-lg"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    redirect(`dashboard/marketplace/edit-listing/${listing.id}`)
+                  }
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Listing
+                </DropdownMenuItem>
+                {listing.status === "active" && (
+                  <DropdownMenuItem
+                    onClick={() => handleMarkAsSold(listing.id)}
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Mark as Sold
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => handleDelete(listing)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-lg">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 text-gray-700">
+                  <Eye className="h-4 w-4 text-blue-500" />
+                  <span className="font-semibold">{listing.views}</span>
+                </div>
+                <div className="flex items-center gap-1 text-gray-700">
+                  <Bookmark className="h-4 w-4 text-red-500" />
+                  <span className="font-semibold">{listing.bookmarks}</span>
+                </div>
+                <div className="flex items-center gap-1 text-gray-700">
+                  <MessageCircle className="h-4 w-4 text-green-500" />
+                  <span className="font-semibold">
+                    {listing.references.length || 0}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-lg line-clamp-1 group-hover:text-blue-600 transition-colors">
-              {listing.name}
-            </h3>
-            <div className="text-right flex-shrink-0">
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                ${listing.price}
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-bold text-lg line-clamp-1 group-hover:text-blue-600 transition-colors">
+                {listing.name}
+              </h3>
+              <div className="text-right flex-shrink-0">
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  ${listing.price}
+                </div>
               </div>
             </div>
-          </div>
 
-          <p className="text-gray-600 text-sm line-clamp-2">
-            {listing.description}
-          </p>
+            <p className="text-gray-600 text-sm line-clamp-2">
+              {listing.description}
+            </p>
 
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Calendar className="h-3.5 w-3.5" />
-              <span>Posted {formatDate(listing.createdAt)}</span>
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Posted {formatDate(listing.createdAt)}</span>
+              </div>
+              {listing.status === "sold" && listing.soldAt && (
+                <Badge variant="secondary" className="text-xs">
+                  Sold {formatDate(listing.soldAt)}
+                </Badge>
+              )}
             </div>
-            {listing.status === "sold" && listing.soldAt && (
-              <Badge variant="secondary" className="text-xs">
-                Sold {formatDate(listing.soldAt)}
-              </Badge>
-            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 
   if (!session) {

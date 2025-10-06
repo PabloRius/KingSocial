@@ -12,7 +12,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { Product } from "@/lib/models/Product";
 import { sendMessageWithFallback } from "@/lib/store/chat";
-import { getListingById, toggleBookmarkListing } from "@/lib/store/marketplace";
+import {
+  getListingById,
+  increaseViews,
+  toggleBookmarkListing,
+} from "@/lib/store/marketplace";
 import {
   Bookmark,
   BookmarkCheck,
@@ -68,8 +72,21 @@ export default function ProductPage({
         }
 
         setProduct(product);
+
         if (session?.profile?.bookmarkedProducts?.includes(productId)) {
           setIsBookmarked(true);
+        }
+
+        const viewedKey = `viewed_${productId}`;
+        if (!sessionStorage.getItem(viewedKey)) {
+          sessionStorage.setItem(viewedKey, "true");
+          const result = await increaseViews(productId);
+          if (result) {
+            setProduct((prev) => {
+              if (!prev) return null;
+              return { ...prev, views: prev?.views ? (prev.views += 1) : 1 };
+            });
+          }
         }
       } catch {
         console.error("Error loading the product");
