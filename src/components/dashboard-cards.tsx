@@ -24,7 +24,7 @@ export const DashboardCards = () => {
       description: "Discover and join campus events.",
       details:
         "Search events by name, location, or interest. Join in and meet your people.",
-      href: "/events",
+      href: "/dashboard/communities",
       buttonText: "Find Events",
       gradient: "from-[#34d399] to-[#10b981]",
     },
