@@ -1,3 +1,5 @@
+"use server";
+
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -6,7 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-async function uploadToCloudinary(file: File, folder: string): Promise<string> {
+export async function uploadToCloudinary(
+  file: File,
+  folder: string
+): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
@@ -37,7 +42,7 @@ function getCloudinaryPublicId(url: string) {
   return publicId;
 }
 
-async function deleteFromCloudinary(url: string, folder?: string) {
+export async function deleteFromCloudinary(url: string, folder?: string) {
   const publicId = getCloudinaryPublicId(url);
   try {
     await cloudinary.uploader.destroy(folder + "/" + publicId);
@@ -45,5 +50,3 @@ async function deleteFromCloudinary(url: string, folder?: string) {
     console.error("Failed to delete from Cloudinary:", err);
   }
 }
-
-export { cloudinary, deleteFromCloudinary, uploadToCloudinary };

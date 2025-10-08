@@ -14,6 +14,21 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
   sellerProfile: { include: { products: { select: productSelect } } },
   createdAt: true,
   bookmarkedProducts: true,
+  communities: {
+    select: {
+      community: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          coverImage: true,
+          _count: { select: { members: true } },
+        },
+      },
+      role: true,
+      joinedAt: true,
+    },
+  },
 });
 
 export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
