@@ -2,6 +2,23 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { userSelect } from "./User";
 
+export const communityMessageSelect =
+  Prisma.validator<Prisma.CommunityMessageSelect>()({
+    id: true,
+    content: true,
+    createdAt: true,
+    sender: {
+      select: {
+        role: true,
+        user: { select: { username: true, name: true, image: true } },
+      },
+    },
+    senderId: true,
+  });
+export type CommunityMessage = Prisma.CommunityMessageGetPayload<{
+  select: typeof communityMessageSelect;
+}>;
+
 export const communityMemberSelect =
   Prisma.validator<Prisma.CommunityMemberSelect>()({
     id: true,
@@ -18,18 +35,7 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
   coverImage: true,
   members: { select: communityMemberSelect },
   chat: {
-    select: {
-      id: true,
-      content: true,
-      createdAt: true,
-      sender: {
-        select: {
-          role: true,
-          user: { select: { username: true, name: true, image: true } },
-        },
-      },
-      senderId: true,
-    },
+    select: communityMessageSelect,
   },
   createdAt: true,
 });

@@ -27,6 +27,7 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
       },
       role: true,
       joinedAt: true,
+      id: true,
     },
   },
 });

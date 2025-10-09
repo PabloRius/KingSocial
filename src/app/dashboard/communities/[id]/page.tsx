@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
-import { Community } from "@/lib/models/Community";
-import { getCommunityById } from "@/lib/store/community";
+import { Community, CommunityMessage } from "@/lib/models/Community";
+import { getCommunityById, sendMessage } from "@/lib/store/community";
 import { getColorFromId } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { redirect, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // const newsAnnouncements = [
 //   {
@@ -124,6 +124,8 @@ export default function CommunityDetailPage({
   );
   const [activeTab, setActiveTab] = useState("chat");
   const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState({
     chat: true,
     news: true,
@@ -195,23 +197,66 @@ export default function CommunityDetailPage({
     }
   };
 
-  const memberRole =
+  const { role: memberRole, id: memberId } =
     session.profile.communities[
       session.profile.communities.findIndex(
         ({ community: commData }) => commData.id === community.id
       )
-    ].role || null;
+    ] || null;
 
   if (!memberRole) redirect("dashboard/communities");
 
   const canManageCommunity =
     memberRole === "admin" || memberRole === "moderator";
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // In a real app, send message to API
-      console.log("Sending message:", message);
+  const handleSendMessage = async () => {
+    const trimmed = message.trim();
+    if (!trimmed || isSending) return;
+
+    try {
+      setIsSending(true);
+
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMessage = {
+        id: tempId,
+        content: trimmed,
+        senderId: memberId,
+        createdAt: new Date(),
+        sender: {
+          role: memberRole || "member",
+          user: {
+            username: session?.profile?.username || "You",
+            name: session?.profile?.name || "",
+            image: session?.profile?.image || "",
+          },
+        },
+      };
+
+      setCommunity((prev) =>
+        prev ? { ...prev, chat: [...prev.chat, optimisticMessage] } : prev
+      );
+
       setMessage("");
+
+      const newMessage = await sendMessage(trimmed, community.id, memberId);
+
+      setCommunity((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          chat: prev.chat.map((m) =>
+            m.id === tempId ? newMessage : m
+          ) as CommunityMessage[],
+        };
+      });
+
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -369,7 +414,7 @@ export default function CommunityDetailPage({
 
               {/* Messages */}
               {community.chat && community.chat.length > 0 ? (
-                <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto">
+                <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto p-2">
                   {community.chat.map((msg) => {
                     const {
                       content,
@@ -381,33 +426,81 @@ export default function CommunityDetailPage({
                     const { role, user } = sender;
                     const { image, name, username } = user;
 
+                    const isOwnMessage = senderId === memberId; // <-- check if current user is sender
+                    const messageColor = getColorFromId(senderId);
+
                     return (
-                      <div key={msgId} className="flex gap-3">
-                        <UserAvatar
-                          avatarUrl={image || undefined}
-                          name={name || username}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className="font-semibold"
-                              style={{ color: getColorFromId(senderId) }}
-                            >
-                              {username}
-                            </span>
-                            {role !== "member" && getRoleBadge(role)}
-                            <span className="text-xs text-gray-500">
+                      <div
+                        key={msgId}
+                        className={`flex items-start gap-3 ${
+                          isOwnMessage ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        {/* Avatar (hide for your own messages) */}
+                        {!isOwnMessage && (
+                          <UserAvatar
+                            avatarUrl={image || undefined}
+                            name={name || username}
+                            className="flex-shrink-0"
+                          />
+                        )}
+
+                        {/* Message Bubble */}
+                        <div
+                          className={`flex flex-col max-w-[70%] ${
+                            isOwnMessage
+                              ? "items-end text-right"
+                              : "items-start text-left"
+                          }`}
+                        >
+                          {!isOwnMessage && (
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className="font-semibold text-sm"
+                                style={{ color: messageColor }}
+                              >
+                                {username}
+                              </span>
+                              {role !== "member" && getRoleBadge(role)}
+                              <span className="text-xs text-gray-400">
+                                {formatTime(createdAt)}
+                              </span>
+                            </div>
+                          )}
+
+                          <div
+                            className={`px-4 py-2 rounded-2xl shadow-sm ${
+                              isOwnMessage
+                                ? "bg-gradient-to-r from-celestial-blue to-picton-blue text-white"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            <p className="break-words">{content}</p>
+                          </div>
+
+                          {/* Time below your own messages */}
+                          {isOwnMessage && (
+                            <span className="text-xs text-gray-400 mt-1">
                               {formatTime(createdAt)}
                             </span>
-                          </div>
-                          <p className="text-gray-700 break-words">{content}</p>
+                          )}
                         </div>
+
+                        {/* Spacer to align layout */}
+                        {isOwnMessage && (
+                          <UserAvatar
+                            avatarUrl={image || undefined}
+                            name={name || username}
+                            className="flex-shrink-0"
+                          />
+                        )}
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
               ) : (
-                <div className="flex-1 text-center">
+                <div className="flex-1 text-center text-gray-500">
                   No messages yet, be the first one to interact with the
                   community!
                 </div>
@@ -418,7 +511,7 @@ export default function CommunityDetailPage({
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   placeholder="Type a message..."
                   className="flex-1"
                 />

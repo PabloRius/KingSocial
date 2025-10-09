@@ -5,6 +5,8 @@ import prisma from "@/prisma";
 import {
   Community,
   CommunityCreatePayload,
+  CommunityMessage,
+  communityMessageSelect,
   communitySelect,
 } from "../models/Community";
 
@@ -76,6 +78,39 @@ export async function getCommunityById(id: string): Promise<Community | null> {
       select: communitySelect,
     });
     return community;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function sendMessage(
+  content: string,
+  communityId: string,
+  senderId: string
+): Promise<CommunityMessage | null> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) {
+      throw new Error("Unauthorized");
+    }
+    const userData = await prisma.communityMember.findUnique({
+      where: { id: senderId },
+      select: { user: { select: { id: true } } },
+    });
+    if (sessionUserId !== userData?.user.id) {
+      throw new Error("Unauthorized");
+    }
+    const newMessage = await prisma.communityMessage.create({
+      data: {
+        content: content,
+        community: { connect: { id: communityId } },
+        sender: { connect: { id: senderId } },
+      },
+      select: communityMessageSelect,
+    });
+    return newMessage || null;
   } catch (error) {
     console.error(error);
     return null;
