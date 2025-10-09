@@ -161,6 +161,8 @@ model CommunityMember {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
 
   role            String      @default("member")
+  chatAlerts      Boolean     @default(true)
+  newsAlerts      Boolean     @default(true)
   
   userId          String      @db.ObjectId
   communityId     String      @db.ObjectId
@@ -168,7 +170,22 @@ model CommunityMember {
   user            User        @relation(fields: [userId], references: [id])
   community       Community   @relation(fields: [communityId], references: [id])
 
+  messages        CommunityMessage[]
+
   joinedAt        DateTime    @default(now())
+}
+
+model CommunityMessage {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+
+  communityId   String            @db.ObjectId
+  senderId      String            @db.ObjectId
+
+  content       String
+  createdAt     DateTime          @default(now())
+
+  community     Community         @relation(fields: [communityId], references: [id])
+  sender        CommunityMember   @relation(fields: [senderId], references: [id])
 }
 
 model Community {
@@ -179,6 +196,7 @@ model Community {
   coverImage  String
 
   members     CommunityMember[]
+  chat        CommunityMessage[]
 
   createdAt   DateTime  @default(now())
 }

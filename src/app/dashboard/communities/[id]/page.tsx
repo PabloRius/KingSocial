@@ -1,6 +1,5 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,8 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserAvatar } from "@/components/user-avatar";
+import { useSession } from "@/context/session-context";
 import { Community } from "@/lib/models/Community";
 import { getCommunityById } from "@/lib/store/community";
+import { getColorFromId } from "@/lib/utils";
 import {
   ArrowLeft,
   Bell,
@@ -38,134 +40,35 @@ import Image from "next/image";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const currentUser = {
-  id: "current-user",
-  name: "You",
-  username: "johndoe",
-  avatar: "/placeholder.svg?height=40&width=40",
-  role: "admin" as const,
-  color: "#3B82F6",
-};
-
-const members = [
-  {
-    id: "1",
-    name: "Alice Johnson",
-    username: "alicej",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "admin" as const,
-    joinedAt: "2024-01-15",
-    color: "#EF4444",
-  },
-  {
-    id: "2",
-    name: "Bob Smith",
-    username: "bobsmith",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "moderator" as const,
-    joinedAt: "2024-01-20",
-    color: "#10B981",
-  },
-  {
-    id: "3",
-    name: "Carol White",
-    username: "carolw",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "moderator" as const,
-    joinedAt: "2024-02-01",
-    color: "#8B5CF6",
-  },
-  {
-    id: "4",
-    name: "David Lee",
-    username: "davidlee",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "member" as const,
-    joinedAt: "2024-02-15",
-    color: "#F59E0B",
-  },
-  {
-    id: "5",
-    name: "Emma Davis",
-    username: "emmad",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "member" as const,
-    joinedAt: "2024-03-01",
-    color: "#EC4899",
-  },
-];
-
-const chatMessages = [
-  {
-    id: "1",
-    userId: "1",
-    content:
-      "Welcome everyone to Tech Innovators! Feel free to share your projects and ideas.",
-    timestamp: "2024-03-15T10:00:00",
-  },
-  {
-    id: "2",
-    userId: "4",
-    content:
-      "Thanks! I'm working on a machine learning project. Would love to get feedback.",
-    timestamp: "2024-03-15T10:15:00",
-  },
-  {
-    id: "3",
-    userId: "2",
-    content: "That sounds interesting! What kind of ML model are you building?",
-    timestamp: "2024-03-15T10:20:00",
-  },
-  {
-    id: "4",
-    userId: "4",
-    content:
-      "It's a computer vision model for detecting objects in real-time video streams.",
-    timestamp: "2024-03-15T10:25:00",
-  },
-  {
-    id: "5",
-    userId: "5",
-    content: "Awesome! Are you using TensorFlow or PyTorch?",
-    timestamp: "2024-03-15T10:30:00",
-  },
-  {
-    id: "6",
-    userId: "4",
-    content: "PyTorch! I find it more intuitive for research projects.",
-    timestamp: "2024-03-15T10:35:00",
-  },
-];
-
-const newsAnnouncements = [
-  {
-    id: "1",
-    authorId: "1",
-    title: "New Workshop Series Announcement",
-    content:
-      "We are excited to announce a new workshop series on AI and Machine Learning starting next month. Stay tuned for registration details!",
-    timestamp: "2024-03-10T14:00:00",
-    pinned: true,
-  },
-  {
-    id: "2",
-    authorId: "3",
-    title: "Community Guidelines Update",
-    content:
-      "We have updated our community guidelines to ensure a respectful and inclusive environment for all members. Please review them in the settings.",
-    timestamp: "2024-03-05T09:00:00",
-    pinned: false,
-  },
-  {
-    id: "3",
-    authorId: "1",
-    title: "March Meetup Recap",
-    content:
-      "Thank you to everyone who attended our March meetup! We had over 50 participants and great discussions. Check out the photos in the events section.",
-    timestamp: "2024-03-01T16:00:00",
-    pinned: false,
-  },
-];
+// const newsAnnouncements = [
+//   {
+//     id: "1",
+//     authorId: "1",
+//     title: "New Workshop Series Announcement",
+//     content:
+//       "We are excited to announce a new workshop series on AI and Machine Learning starting next month. Stay tuned for registration details!",
+//     timestamp: "2024-03-10T14:00:00",
+//     pinned: true,
+//   },
+//   {
+//     id: "2",
+//     authorId: "3",
+//     title: "Community Guidelines Update",
+//     content:
+//       "We have updated our community guidelines to ensure a respectful and inclusive environment for all members. Please review them in the settings.",
+//     timestamp: "2024-03-05T09:00:00",
+//     pinned: false,
+//   },
+//   {
+//     id: "3",
+//     authorId: "1",
+//     title: "March Meetup Recap",
+//     content:
+//       "Thank you to everyone who attended our March meetup! We had over 50 participants and great discussions. Check out the photos in the events section.",
+//     timestamp: "2024-03-01T16:00:00",
+//     pinned: false,
+//   },
+// ];
 
 const events = [
   {
@@ -215,6 +118,7 @@ export default function CommunityDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { session, loading } = useSession();
   const [community, setCommunity] = useState<Community | undefined | null>(
     undefined
   );
@@ -242,10 +146,29 @@ export default function CommunityDetailPage({
     initPage();
   }, [params]);
 
-  const getMemberById = (userId: string) => {
-    if (userId === currentUser.id) return currentUser;
-    return members.find((m) => m.id === userId);
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center w-full">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session?.profile) {
+    redirect("/");
+  }
+
+  if (community === null) {
+    redirect("/dashboard/communities");
+  }
+
+  if (community === undefined) {
+    return (
+      <div className="flex flex-1 h-full w-full justify-center items-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -272,8 +195,17 @@ export default function CommunityDetailPage({
     }
   };
 
+  const memberRole =
+    session.profile.communities[
+      session.profile.communities.findIndex(
+        ({ community: commData }) => commData.id === community.id
+      )
+    ].role || null;
+
+  if (!memberRole) redirect("dashboard/communities");
+
   const canManageCommunity =
-    currentUser.role === "admin" || currentUser.role === "moderator";
+    memberRole === "admin" || memberRole === "moderator";
 
   const handleSendMessage = () => {
     if (message.trim()) {
@@ -283,9 +215,8 @@ export default function CommunityDetailPage({
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
+  const formatTime = (timestamp: Date) => {
+    return timestamp.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -298,18 +229,6 @@ export default function CommunityDetailPage({
       year: "numeric",
     });
   };
-
-  if (community === null) {
-    redirect("/dashboard/communities");
-  }
-
-  if (community === undefined) {
-    return (
-      <div className="flex flex-1 h-full w-full justify-center items-center">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -326,7 +245,7 @@ export default function CommunityDetailPage({
 
         {/* Back Button */}
         <Button
-          onClick={() => router.push("/community")}
+          onClick={() => router.push("/dashboard/communities")}
           variant="ghost"
           size="icon"
           className="absolute top-4 left-4 bg-white/90 hover:bg-white text-gray-900 backdrop-blur-sm"
@@ -449,42 +368,50 @@ export default function CommunityDetailPage({
               </div>
 
               {/* Messages */}
-              <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto">
-                {chatMessages.map((msg) => {
-                  const member = getMemberById(msg.userId);
-                  if (!member) return null;
+              {community.chat && community.chat.length > 0 ? (
+                <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto">
+                  {community.chat.map((msg) => {
+                    const {
+                      content,
+                      createdAt,
+                      id: msgId,
+                      senderId,
+                      sender,
+                    } = msg;
+                    const { role, user } = sender;
+                    const { image, name, username } = user;
 
-                  return (
-                    <div key={msg.id} className="flex gap-3">
-                      <Avatar className="w-10 h-10 flex-shrink-0">
-                        <AvatarImage
-                          src={member.avatar || "/placeholder.svg"}
-                          alt={member.name}
+                    return (
+                      <div key={msgId} className="flex gap-3">
+                        <UserAvatar
+                          avatarUrl={image || undefined}
+                          name={name || username}
                         />
-                        <AvatarFallback>{member.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="font-semibold"
-                            style={{ color: member.color }}
-                          >
-                            {member.name}
-                          </span>
-                          {member.role !== "member" &&
-                            getRoleBadge(member.role)}
-                          <span className="text-xs text-gray-500">
-                            {formatTime(msg.timestamp)}
-                          </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className="font-semibold"
+                              style={{ color: getColorFromId(senderId) }}
+                            >
+                              {username}
+                            </span>
+                            {role !== "member" && getRoleBadge(role)}
+                            <span className="text-xs text-gray-500">
+                              {formatTime(createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-gray-700 break-words">{content}</p>
                         </div>
-                        <p className="text-gray-700 break-words">
-                          {msg.content}
-                        </p>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex-1 text-center">
+                  No messages yet, be the first one to interact with the
+                  community!
+                </div>
+              )}
 
               {/* Message Input */}
               <div className="flex gap-2">
@@ -553,7 +480,7 @@ export default function CommunityDetailPage({
                 </div>
               </div>
 
-              {newsAnnouncements.map((announcement) => {
+              {/* {newsAnnouncements.map((announcement) => {
                 const author = getMemberById(announcement.authorId);
                 if (!author) return null;
 
@@ -593,7 +520,7 @@ export default function CommunityDetailPage({
                     <p className="text-gray-700">{announcement.content}</p>
                   </Card>
                 );
-              })}
+              })} */}
             </div>
           </TabsContent>
 
@@ -697,7 +624,7 @@ export default function CommunityDetailPage({
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Members ({members.length + 1})
+                  Members ({community.members.length})
                 </h2>
                 {canManageCommunity && (
                   <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
@@ -708,52 +635,25 @@ export default function CommunityDetailPage({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Current User */}
-                <Card className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage
-                          src={currentUser.avatar || "/placeholder.svg"}
-                          alt={currentUser.name}
-                        />
-                        <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {currentUser.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          @{currentUser.username}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3">{getRoleBadge(currentUser.role)}</div>
-                </Card>
-
                 {/* Other Members */}
-                {members.map((member) => (
-                  <Card key={member.id} className="p-4">
+                {community.members.map(({ user, role }) => (
+                  <Card key={user.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage
-                            src={member.avatar || "/placeholder.svg"}
-                            alt={member.name}
-                          />
-                          <AvatarFallback>{member.name[0]}</AvatarFallback>
-                        </Avatar>
+                        <UserAvatar
+                          avatarUrl={user.image || undefined}
+                          name={user.name || user.username}
+                        />
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {member.name}
+                            {user.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            @{member.username}
+                            @{user.username}
                           </p>
                         </div>
                       </div>
-                      {canManageCommunity && member.role === "member" && (
+                      {canManageCommunity && role === "member" && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
@@ -770,9 +670,9 @@ export default function CommunityDetailPage({
                       )}
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      {getRoleBadge(member.role)}
+                      {getRoleBadge(role)}
                       <span className="text-xs text-gray-500">
-                        Joined {formatDate(new Date(member.joinedAt))}
+                        Joined {formatDate(new Date(user.createdAt))}
                       </span>
                     </div>
                   </Card>
