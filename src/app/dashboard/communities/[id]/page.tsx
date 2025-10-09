@@ -197,14 +197,13 @@ export default function CommunityDetailPage({
     }
   };
 
-  const { role: memberRole, id: memberId } =
-    session.profile.communities[
-      session.profile.communities.findIndex(
-        ({ community: commData }) => commData.id === community.id
-      )
-    ] || null;
+  const { role: memberRole, id: memberId } = session.profile.communities[
+    session.profile.communities.findIndex(
+      ({ community: commData }) => commData.id === community.id
+    )
+  ] || { role: null, id: null };
 
-  if (!memberRole) redirect("dashboard/communities");
+  if (!memberRole || !memberId) redirect("dashboard/communities");
 
   const canManageCommunity =
     memberRole === "admin" || memberRole === "moderator";

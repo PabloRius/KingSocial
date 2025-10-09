@@ -14,7 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/context/session-context";
-import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "@/lib/cloudinary_utils";
 import {
   CommunityCreatePayload,
   communityCreateValidator,

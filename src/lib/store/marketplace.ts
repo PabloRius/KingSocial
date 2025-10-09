@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
-import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary";
+import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary_utils";
 import { Product, productSelect, UpdateProduct } from "../models/Product";
 
 export async function getListingById(id: string): Promise<Product | null> {
