@@ -33,6 +33,7 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
   name: true,
   description: true,
   coverImage: true,
+  mode: true,
   members: { select: communityMemberSelect },
   chat: {
     select: communityMessageSelect,
@@ -48,6 +49,7 @@ export type CommunityCreatePayload = {
   name: string;
   description: string;
   coverImage: string;
+  mode: string;
 };
 
 export const communityCreateValidator = z.object({
@@ -59,9 +61,13 @@ export const communityCreateValidator = z.object({
   description: z
     .string()
     .min(10, "Description must be at least 10 characters")
-    .max(300, "Description must be less than 500 characters")
+    .max(500, "Description must be less than 500 characters")
     .trim(),
   coverImage: z
     .string({ required_error: "Cover image is required" })
     .nonempty("Cover image is required"),
+  mode: z.enum(["public", "private"], {
+    required_error: "You must select a visibility mode",
+    invalid_type_error: "Invalid mode, must be public or private",
+  }),
 });

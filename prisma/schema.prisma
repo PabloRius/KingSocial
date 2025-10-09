@@ -17,30 +17,31 @@ datasource db {
 
 // Prisma auth adapter - start
 model User {
-  id                  String            @id @default(auto()) @map("_id") @db.ObjectId
-  name                String?
-  email               String?           @unique
-  emailVerified       DateTime?
-  image               String?
-  accounts            Account[]
-  sessions            Session[]
+  id                      String            @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String?
+  email                   String?           @unique
+  emailVerified           DateTime?
+  image                   String?
+  accounts                Account[]
+  sessions                Session[]
  
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
 
-  username            String            @unique
-  sellerProfile       SellerProfile?
-  biography           String?
-  instagram           String?
-  linkedin            String?
-  coverImage          String?
+  username                String            @unique
+  sellerProfile           SellerProfile?
+  biography               String?
+  instagram               String?
+  linkedin                String?
+  coverImage              String?
 
-  bookmarkedProducts  String[]          @default([])
+  bookmarkedProducts      String[]          @default([])
 
-  chats               ChatParticipant[]
-  messages            Message[]
+  chats                   ChatParticipant[]
+  messages                Message[]
 
-  communities         CommunityMember[]
+  communities             CommunityMember[]
+  communityJoinRequests   CommunityJoinRequest[]
 }
  
 model Account {
@@ -189,14 +190,35 @@ model CommunityMessage {
 }
 
 model Community {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id            String                  @id @default(auto()) @map("_id") @db.ObjectId
 
-  name        String
-  description String
-  coverImage  String
+  name          String
+  description   String
+  coverImage    String
 
-  members     CommunityMember[]
-  chat        CommunityMessage[]
+  mode          String                  @default("public")
 
-  createdAt   DateTime  @default(now())
+  members       CommunityMember[]
+  chat          CommunityMessage[]
+
+  joinRequests  CommunityJoinRequest[]
+
+  createdAt     DateTime                @default(now())
+}
+
+model CommunityJoinRequest {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  message       String?
+  status        String        @default("pending")
+  
+  userId        String        @db.ObjectId
+  communityId   String        @db.ObjectId
+
+  createdAt     DateTime      @default(now())
+  
+  user          User          @relation(fields: [userId], references: [id])
+  community     Community     @relation(fields: [communityId], references: [id])
+
+  @@unique([userId, communityId])
 }

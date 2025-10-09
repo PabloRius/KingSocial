@@ -36,6 +36,85 @@ export async function createCommunity(
   }
 }
 
+export async function joinCommunity(communityId: string): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) throw new Error("Unauthorized");
+
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      select: { id: true, mode: true, members: { select: { userId: true } } },
+    });
+
+    if (!community) throw new Error("Community not found");
+
+    const isMember = community.members.some((m) => m.userId === sessionUserId);
+    if (isMember) return true;
+
+    if (community.mode !== "public") {
+      throw new Error("Cannot directly join a private community");
+    }
+
+    await prisma.communityMember.create({
+      data: {
+        user: { connect: { id: sessionUserId } },
+        community: { connect: { id: communityId } },
+        role: "member",
+      },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error joining community:", error);
+    return false;
+  }
+}
+
+export async function sendJoinRequest(
+  communityId: string,
+  message?: string
+): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) throw new Error("Unauthorized");
+
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      select: { id: true, mode: true },
+    });
+
+    if (!community) throw new Error("Community not found");
+    if (community.mode !== "private") {
+      throw new Error("Join requests only apply to private communities");
+    }
+
+    const existingMember = await prisma.communityMember.findFirst({
+      where: { userId: sessionUserId, communityId },
+    });
+    if (existingMember) throw new Error("Already a member");
+
+    const existingRequest = await prisma.communityJoinRequest.findFirst({
+      where: { userId: sessionUserId, communityId },
+    });
+    if (existingRequest) throw new Error("Join request already sent");
+
+    await prisma.communityJoinRequest.create({
+      data: {
+        message: message || "",
+        user: { connect: { id: sessionUserId } },
+        community: { connect: { id: communityId } },
+      },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error sending join request:", error);
+    return false;
+  }
+}
+
 export async function getCommunities(
   query?: string
 ): Promise<Community[] | null> {

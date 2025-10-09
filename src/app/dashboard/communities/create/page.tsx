@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/context/session-context";
 import {
@@ -23,14 +24,17 @@ import {
   communityCreateValidator,
 } from "@/lib/models/Community";
 import { createCommunity } from "@/lib/store/community";
-import { ArrowLeft, Loader2, Upload, X } from "lucide-react";
+import { ArrowLeft, Globe, Loader2, Lock, Upload, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function CreateCommunityPage() {
-  const { session } = useSession();
+  const {
+    session,
+    handlers: { reload },
+  } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -39,6 +43,7 @@ export default function CreateCommunityPage() {
     name: "",
     description: "",
     coverImage: "",
+    mode: "public",
   });
   const [errors, setErrors] = useState<
     Partial<Record<keyof CommunityCreatePayload, string>>
@@ -108,7 +113,8 @@ export default function CreateCommunityPage() {
       const newCommunity = await createCommunity(formData, session.profile.id);
       if (!newCommunity) throw Error("Error creating the community");
 
-      router.push(newCommunity.id);
+      await reload();
+      router.push(`/dashboard/communities/${newCommunity.id}`);
     } catch (err) {
       console.error(err);
       if (url) await deleteFromCloudinary(url, "communities");
@@ -238,6 +244,65 @@ export default function CreateCommunityPage() {
                   </p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Visibility */}
+          <Card className="border-celestial-blue/20">
+            <CardHeader>
+              <CardTitle>Visibility</CardTitle>
+              <CardDescription>
+                Choose who can view and join your community
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup
+                value={formData.mode}
+                onValueChange={(value) => handleInputChange("mode", value)}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              >
+                {/* Public Option */}
+                <label
+                  htmlFor="public"
+                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition hover:shadow-md ${
+                    formData.mode === "public"
+                      ? "border-celestial-blue bg-celestial-blue/5"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <RadioGroupItem value="public" id="public" />
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-celestial-blue" />
+                    <div>
+                      <p className="font-medium">Public</p>
+                      <p className="text-sm text-muted-foreground">
+                        Anyone can view and join your community
+                      </p>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Private Option */}
+                <label
+                  htmlFor="private"
+                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition hover:shadow-md ${
+                    formData.mode === "private"
+                      ? "border-picton-blue bg-picton-blue/5"
+                      : "border-gray-200"
+                  }`}
+                >
+                  <RadioGroupItem value="private" id="private" />
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-picton-blue" />
+                    <div>
+                      <p className="font-medium">Private</p>
+                      <p className="text-sm text-muted-foreground">
+                        Only invited members can join
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              </RadioGroup>
             </CardContent>
           </Card>
 

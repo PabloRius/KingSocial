@@ -3,6 +3,7 @@ import { SessionProvider } from "@/context/session-context";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -86,6 +87,7 @@ export default function RootLayout({
       >
         <SessionProvider>{children}</SessionProvider>
         <FloatingBackButton />
+        <Toaster />
       </body>
       <Analytics />
     </html>

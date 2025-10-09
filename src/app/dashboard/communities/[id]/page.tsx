@@ -138,6 +138,7 @@ export default function CommunityDetailPage({
     const initPage = async () => {
       try {
         const { id } = await params;
+        if (!id) return;
         const fetchedCommunity = await getCommunityById(id);
         setCommunity(fetchedCommunity || null);
       } catch (error) {
@@ -160,16 +161,16 @@ export default function CommunityDetailPage({
     redirect("/");
   }
 
-  if (community === null) {
-    redirect("/dashboard/communities");
-  }
-
   if (community === undefined) {
     return (
       <div className="flex flex-1 h-full w-full justify-center items-center">
         <Loader2 className="animate-spin" />
       </div>
     );
+  }
+
+  if (community === null) {
+    return <div>Mal</div>;
   }
 
   const getRoleBadge = (role: string) => {
@@ -197,13 +198,14 @@ export default function CommunityDetailPage({
     }
   };
 
-  const { role: memberRole, id: memberId } = session.profile.communities[
-    session.profile.communities.findIndex(
-      ({ community: commData }) => commData.id === community.id
-    )
-  ] || { role: null, id: null };
+  const { role: memberRole, id: memberId } =
+    session.profile.communities[
+      session.profile.communities.findIndex(
+        ({ community: commData }) => commData.id === community.id
+      )
+    ];
 
-  if (!memberRole || !memberId) redirect("dashboard/communities");
+  //   if (!memberRole || !memberId) redirect("/dashboard/communities");
 
   const canManageCommunity =
     memberRole === "admin" || memberRole === "moderator";
@@ -728,7 +730,7 @@ export default function CommunityDetailPage({
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Other Members */}
-                {community.members.map(({ user, role }) => (
+                {community.members.map(({ user, role, joinedAt }) => (
                   <Card key={user.id} className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -764,7 +766,7 @@ export default function CommunityDetailPage({
                     <div className="mt-3 flex items-center justify-between">
                       {getRoleBadge(role)}
                       <span className="text-xs text-gray-500">
-                        Joined {formatDate(new Date(user.createdAt))}
+                        Joined {formatDate(joinedAt)}
                       </span>
                     </div>
                   </Card>
