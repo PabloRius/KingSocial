@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
+import { deleteFromCloudinary } from "../cloudinary_utils";
 import {
   Community,
   CommunityCreatePayload,
@@ -193,5 +194,51 @@ export async function sendMessage(
   } catch (error) {
     console.error(error);
     return null;
+  }
+}
+
+export async function deleteCommunityById(id: string): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) throw new Error("Unauthorized");
+
+    const community = await prisma.community.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        coverImage: true,
+        members: {
+          select: { role: true, userId: true },
+        },
+      },
+    });
+
+    if (!community) throw new Error("Invalid community ID");
+
+    const loggedMember = community.members.find(
+      (m) => m.userId === sessionUserId
+    );
+
+    if (!loggedMember || loggedMember.role !== "admin") {
+      throw new Error("You must be an admin to delete this community");
+    }
+
+    if (community.coverImage) {
+      try {
+        await deleteFromCloudinary(community.coverImage, "communities");
+      } catch (err) {
+        console.warn("Failed to delete image from Cloudinary:", err);
+      }
+    }
+
+    await prisma.community.delete({
+      where: { id },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting community:", error);
+    return false;
   }
 }

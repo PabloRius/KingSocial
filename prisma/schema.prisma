@@ -168,25 +168,27 @@ model CommunityMember {
   userId          String      @db.ObjectId
   communityId     String      @db.ObjectId
 
-  user            User        @relation(fields: [userId], references: [id])
-  community       Community   @relation(fields: [communityId], references: [id])
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community       Community   @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   messages        CommunityMessage[]
 
   joinedAt        DateTime    @default(now())
+
+  @@unique([userId, communityId])
 }
 
 model CommunityMessage {
   id            String            @id @default(auto()) @map("_id") @db.ObjectId
 
   communityId   String            @db.ObjectId
-  senderId      String            @db.ObjectId
+  senderId      String?           @db.ObjectId
 
   content       String
   createdAt     DateTime          @default(now())
 
-  community     Community         @relation(fields: [communityId], references: [id])
-  sender        CommunityMember   @relation(fields: [senderId], references: [id])
+  community     Community         @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  sender        CommunityMember?  @relation(fields: [senderId], references: [id], onDelete: SetNull)
 }
 
 model Community {
@@ -217,8 +219,8 @@ model CommunityJoinRequest {
 
   createdAt     DateTime      @default(now())
   
-  user          User          @relation(fields: [userId], references: [id])
-  community     Community     @relation(fields: [communityId], references: [id])
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community     Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   @@unique([userId, communityId])
 }

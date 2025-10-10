@@ -4,19 +4,36 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { Community, CommunityMessage } from "@/lib/models/Community";
-import { getCommunityById, sendMessage } from "@/lib/store/community";
+import {
+  deleteCommunityById,
+  getCommunityById,
+  sendMessage,
+} from "@/lib/store/community";
 import { getColorFromId } from "@/lib/utils";
 import {
+  AlertTriangle,
   ArrowLeft,
   Bell,
   BellOff,
@@ -33,12 +50,14 @@ import {
   Settings,
   Shield,
   Trash2,
+  Upload,
   UserPlus,
   Users,
 } from "lucide-react";
 import Image from "next/image";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 // const newsAnnouncements = [
 //   {
@@ -118,7 +137,11 @@ export default function CommunityDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const { session, loading } = useSession();
+  const {
+    session,
+    loading,
+    handlers: { reload },
+  } = useSession();
   const [community, setCommunity] = useState<Community | undefined | null>(
     undefined
   );
@@ -130,9 +153,33 @@ export default function CommunityDetailPage({
     chat: true,
     news: true,
   });
-  //   const [selectedMember, setSelectedMember] = useState<
-  //     (typeof members)[0] | null
-  //   >(null);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState("general");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  // Settings state
+  const [communitySettings, setCommunitySettings] = useState({
+    name: community?.name || "" || "",
+    description: community?.description || "",
+    coverImage: community?.coverImage || "",
+    mode: community?.mode || "",
+    whoCanPostNews: "admins-only" as
+      | "admins-only"
+      | "moderators-and-admins"
+      | "all-members",
+    whoCanCreateEvents: "admins-only" as
+      | "admins-only"
+      | "moderators-and-admins"
+      | "all-members",
+    requireApproval: false,
+    allowInvites: true,
+    showMemberList: true,
+  });
+
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const initPage = async () => {
@@ -141,6 +188,14 @@ export default function CommunityDetailPage({
         if (!id) return;
         const fetchedCommunity = await getCommunityById(id);
         setCommunity(fetchedCommunity || null);
+        if (fetchedCommunity)
+          setCommunitySettings((prev) => ({
+            ...prev,
+            name: fetchedCommunity.name,
+            description: fetchedCommunity.description,
+            coverImage: fetchedCommunity.coverImage,
+            mode: fetchedCommunity.mode,
+          }));
       } catch (error) {
         console.error(error);
         setCommunity(null);
@@ -170,10 +225,10 @@ export default function CommunityDetailPage({
   }
 
   if (community === null) {
-    return <div>Mal</div>;
+    return redirect("/dashboard/communities");
   }
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role: string | undefined) => {
     switch (role) {
       case "admin":
         return (
@@ -261,6 +316,37 @@ export default function CommunityDetailPage({
     }
   };
 
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveSettings = () => {
+    console.log("Saving settings:", communitySettings);
+    setSettingsOpen(false);
+  };
+
+  const handleDeleteCommunity = async () => {
+    const result = await deleteCommunityById(community.id);
+    if (result) {
+      setDeleteConfirmOpen(false);
+      reload();
+      router.push("/dashboard/communities");
+    } else {
+      toast.error("Error deleting the community");
+    }
+  };
+
   const formatTime = (timestamp: Date) => {
     return timestamp.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -302,6 +388,7 @@ export default function CommunityDetailPage({
         {/* Settings Button (Admin/Moderator only) */}
         {canManageCommunity && (
           <Button
+            onClick={() => setSettingsOpen(true)}
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 backdrop-blur-sm"
@@ -424,11 +511,13 @@ export default function CommunityDetailPage({
                       senderId,
                       sender,
                     } = msg;
-                    const { role, user } = sender;
-                    const { image, name, username } = user;
+                    const { role, user } = sender || {};
+                    const { image, name, username } = user || {};
 
-                    const isOwnMessage = senderId === memberId; // <-- check if current user is sender
-                    const messageColor = getColorFromId(senderId);
+                    const isOwnMessage = senderId === memberId;
+                    const messageColor = senderId
+                      ? getColorFromId(senderId)
+                      : "hsl(79 4.8% 60%)";
 
                     return (
                       <div
@@ -776,6 +865,317 @@ export default function CommunityDetailPage({
           </TabsContent>
         </Tabs>
       </div>
+      {/* Settings Modal */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Community Settings</DialogTitle>
+            <DialogDescription>
+              Manage your community settings and preferences
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs
+            value={settingsTab}
+            onValueChange={setSettingsTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="permissions">Permissions</TabsTrigger>
+              <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+            </TabsList>
+
+            {/* General Settings */}
+            <TabsContent value="general" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="community-name">Community Name</Label>
+                  <Input
+                    id="community-name"
+                    value={communitySettings.name}
+                    onChange={(e) =>
+                      setCommunitySettings({
+                        ...communitySettings,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Enter community name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="community-description">Description</Label>
+                  <Textarea
+                    id="community-description"
+                    value={communitySettings.description}
+                    onChange={(e) =>
+                      setCommunitySettings({
+                        ...communitySettings,
+                        description: e.target.value,
+                      })
+                    }
+                    placeholder="Describe your community"
+                    rows={4}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Cover Image</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-full h-40 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden hover:border-celestial-blue transition-colors">
+                      {coverImagePreview || communitySettings.coverImage ? (
+                        <Image
+                          src={
+                            coverImagePreview ||
+                            communitySettings.coverImage ||
+                            "/placeholder.svg"
+                          }
+                          alt="Cover preview"
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                          <Upload className="w-8 h-8 mb-2" />
+                          <span className="text-sm">Upload cover image</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverImageUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Recommended size: 1200x400px (max 5MB)
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Permissions Settings */}
+            <TabsContent value="permissions" className="space-y-6 mt-6">
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Content Creation</h3>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Who can post news announcements?</Label>
+                        <p className="text-sm text-gray-500">
+                          Control who can create news posts
+                        </p>
+                      </div>
+                      <select
+                        value={communitySettings.whoCanPostNews}
+                        onChange={(e) =>
+                          setCommunitySettings({
+                            ...communitySettings,
+                            whoCanPostNews: e.target
+                              .value as typeof communitySettings.whoCanPostNews,
+                          })
+                        }
+                        className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-celestial-blue"
+                      >
+                        <option value="admins-only">Admins Only</option>
+                        <option value="moderators-and-admins">
+                          Moderators & Admins
+                        </option>
+                        <option value="all-members">All Members</option>
+                      </select>
+                    </div>
+
+                    <Separator />
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label>Who can create events?</Label>
+                        <p className="text-sm text-gray-500">
+                          Control who can organize community events
+                        </p>
+                      </div>
+                      <select
+                        value={communitySettings.whoCanCreateEvents}
+                        onChange={(e) =>
+                          setCommunitySettings({
+                            ...communitySettings,
+                            whoCanCreateEvents: e.target
+                              .value as typeof communitySettings.whoCanCreateEvents,
+                          })
+                        }
+                        className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-celestial-blue"
+                      >
+                        <option value="admins-only">Admins Only</option>
+                        <option value="moderators-and-admins">
+                          Moderators & Admins
+                        </option>
+                        <option value="all-members">All Members</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Privacy & Access</h3>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="require-approval">
+                        Require approval to join
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        New members must be approved by admins
+                      </p>
+                    </div>
+                    <Switch
+                      id="require-approval"
+                      checked={communitySettings.requireApproval}
+                      onCheckedChange={(checked) =>
+                        setCommunitySettings({
+                          ...communitySettings,
+                          requireApproval: checked,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="allow-invites">
+                        Allow members to invite others
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Members can send invite links
+                      </p>
+                    </div>
+                    <Switch
+                      id="allow-invites"
+                      checked={communitySettings.allowInvites}
+                      onCheckedChange={(checked) =>
+                        setCommunitySettings({
+                          ...communitySettings,
+                          allowInvites: checked,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="show-member-list">
+                        Show member list to everyone
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        All members can see the full member list
+                      </p>
+                    </div>
+                    <Switch
+                      id="show-member-list"
+                      checked={communitySettings.showMemberList}
+                      onCheckedChange={(checked) =>
+                        setCommunitySettings({
+                          ...communitySettings,
+                          showMemberList: checked,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Danger Zone */}
+            <TabsContent value="danger" className="space-y-6 mt-6">
+              <div className="space-y-4">
+                <div className="border-2 border-red-200 rounded-lg p-6 bg-red-50">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                    <div className="space-y-3 flex-1">
+                      <div>
+                        <h3 className="text-lg font-semibold text-red-900">
+                          Delete Community
+                        </h3>
+                        <p className="text-sm text-red-700 mt-1">
+                          Once you delete this community, there is no going
+                          back. This action will permanently delete all
+                          community data, including messages, events, and member
+                          information.
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          setDeleteConfirmOpen(true);
+                        }}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Community
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveSettings}
+              className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-6 h-6" />
+              Delete Community
+            </DialogTitle>
+            <DialogDescription className="pt-4">
+              Are you absolutely sure you want to delete{" "}
+              <strong>{community.name}</strong>? This action cannot be undone
+              and will permanently delete all the community data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCommunity}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
