@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { eventSelect } from "./Event";
 import { userSelect } from "./User";
 
 export const communityMessageSelect =
@@ -38,6 +39,7 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
   chat: {
     select: communityMessageSelect,
   },
+  events: { select: eventSelect },
   createdAt: true,
 });
 

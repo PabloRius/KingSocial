@@ -38,7 +38,6 @@ import {
   Bell,
   BellOff,
   Calendar,
-  Clock,
   Crown,
   ImageIcon,
   Loader2,
@@ -55,6 +54,7 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -88,48 +88,6 @@ import { toast } from "sonner";
 //     pinned: false,
 //   },
 // ];
-
-const events = [
-  {
-    id: "1",
-    title: "AI Workshop: Getting Started with Neural Networks",
-    description:
-      "Learn the basics of neural networks and build your first model.",
-    coverImage: "/tech-meetup.png",
-    date: "2024-04-15",
-    time: "18:00",
-    location: "Virtual Event",
-    attendees: 45,
-    capacity: 100,
-    type: "online" as const,
-  },
-  {
-    id: "2",
-    title: "Tech Innovators Monthly Meetup",
-    description:
-      "Monthly networking event for tech professionals and enthusiasts.",
-    coverImage: "/virtual-workshop.png",
-    date: "2024-04-20",
-    time: "19:00",
-    location: "Innovation Hub, Downtown",
-    attendees: 78,
-    capacity: 150,
-    type: "offline" as const,
-  },
-  {
-    id: "3",
-    title: "Hackathon 2024: Build the Future",
-    description:
-      "48-hour hackathon focused on solving real-world problems with technology.",
-    coverImage: "/tech-innovation-abstract.png",
-    date: "2024-05-10",
-    time: "09:00",
-    location: "Tech Campus",
-    attendees: 120,
-    capacity: 200,
-    type: "offline" as const,
-  },
-];
 
 export default function CommunityDetailPage({
   params,
@@ -260,7 +218,7 @@ export default function CommunityDetailPage({
       )
     ];
 
-  //   if (!memberRole || !memberId) redirect("/dashboard/communities");
+  if (!memberRole || !memberId) redirect("/dashboard/communities");
 
   const canManageCommunity =
     memberRole === "admin" || memberRole === "moderator";
@@ -715,22 +673,24 @@ export default function CommunityDetailPage({
                   Community Events
                 </h2>
                 {canManageCommunity && (
-                  <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Create Event
-                  </Button>
+                  <Link href={`${community.id}/events/create`}>
+                    <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Create Event
+                    </Button>
+                  </Link>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event) => (
+                {community.events.map((event) => (
                   <Card
                     key={event.id}
                     className="overflow-hidden group hover:shadow-lg transition-all"
                   >
                     <div className="relative h-48 w-full">
                       <Image
-                        src={event.coverImage || "/placeholder.svg"}
+                        src={event.coverImage || "/placeholder.png"}
                         alt={event.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -738,12 +698,14 @@ export default function CommunityDetailPage({
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <Badge
                         className={`absolute top-3 right-3 ${
-                          event.type === "online"
+                          event.location_format === "online"
                             ? "bg-green-500 text-white"
                             : "bg-blue-500 text-white"
                         }`}
                       >
-                        {event.type === "online" ? "🌐 Online" : "📍 In Person"}
+                        {event.location_format === "online"
+                          ? "🌐 Online"
+                          : "📍 In Person"}
                       </Badge>
                     </div>
                     <div className="p-4">
@@ -757,16 +719,14 @@ export default function CommunityDetailPage({
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4" />
                           <span>
-                            {formatDate(new Date(event.date))} at {event.time}
+                            {formatDate(new Date(event.date))}
+                            {event.start_time
+                              ? ` at ${event.start_time}`
+                              : " all day"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
-                          {event.type === "online" ? (
-                            <>
-                              <Clock className="w-4 h-4" />
-                              <span>{event.location}</span>
-                            </>
-                          ) : (
+                          {event.location_format === "in-person" && (
                             <>
                               <MapPin className="w-4 h-4" />
                               <span>{event.location}</span>
@@ -774,24 +734,28 @@ export default function CommunityDetailPage({
                           )}
                         </div>
                       </div>
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                          <span>{event.attendees} attending</span>
-                          <span>
-                            {event.capacity - event.attendees} spots left
-                          </span>
+                      {event.capacity && (
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                            <span>{event._count.participants} attending</span>
+                            <span>
+                              {event.capacity - event._count.participants} spots
+                              left
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
+                              style={{
+                                width: `${
+                                  (event._count.participants / event.capacity) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
-                            style={{
-                              width: `${
-                                (event.attendees / event.capacity) * 100
-                              }%`,
-                            }}
-                          />
-                        </div>
-                      </div>
+                      )}
                       <Button className="w-full bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
                         View Details
                       </Button>

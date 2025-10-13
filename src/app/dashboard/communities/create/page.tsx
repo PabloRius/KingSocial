@@ -100,11 +100,14 @@ export default function CreateCommunityPage() {
       const result = communityCreateValidator.safeParse(formData);
       if (!result.success) {
         const fieldErrors = result.error.flatten().fieldErrors;
-        setErrors({
-          name: fieldErrors.name?.[0],
-          description: fieldErrors.description?.[0],
-          coverImage: fieldErrors.coverImage?.[0],
-        });
+        setErrors(
+          Object.fromEntries(
+            Object.entries(fieldErrors).map(([key, value]) => [
+              key,
+              value?.[0] || "",
+            ])
+          )
+        );
 
         if (url) await deleteFromCloudinary(url, "communities");
         return;

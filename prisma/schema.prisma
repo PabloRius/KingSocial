@@ -58,8 +58,8 @@ model Account {
   id_token          String? @db.String
   session_state     String?
  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
  
@@ -67,14 +67,14 @@ model Account {
 }
  
 model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionToken String   @unique
-  userId       String   @db.ObjectId
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String     @unique
+  userId       String     @db.ObjectId
   expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
  
 model VerificationToken {
@@ -91,13 +91,13 @@ model VerificationToken {
 // App-specific schemas - start
 
 model SellerProfile {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String    @unique @db.ObjectId
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String        @unique @db.ObjectId
   rating    Int?
   products  Product[]
-  plan      String    @default("basic")
-  totalSales Int      @default(0)
+  plan      String        @default("basic")
+  totalSales Int          @default(0)
 }
 
 model Product {
@@ -124,56 +124,59 @@ model Product {
 }
 
 model Message {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  chatId        String   @db.ObjectId
-  senderId      String   @db.ObjectId
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  chatId        String      @db.ObjectId
+  senderId      String      @db.ObjectId
   content       String
-  createdAt     DateTime @default(now())
+  createdAt     DateTime    @default(now())
   
-  productRefId  String?    @db.ObjectId
-  productRef    Product?  @relation(fields: [productRefId], references: [id])
+  productRefId  String?     @db.ObjectId
+  productRef    Product?    @relation(fields: [productRefId], references: [id])
 
-  chat          Chat     @relation(fields: [chatId], references: [id])
-  sender        User     @relation(fields: [senderId], references: [id])
+  chat          Chat        @relation(fields: [chatId], references: [id])
+  sender        User        @relation(fields: [senderId], references: [id])
 }
 
 model ChatParticipant {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  chatId String @db.ObjectId
-  userId String @db.ObjectId
+  id     String       @id @default(auto()) @map("_id") @db.ObjectId
+  chatId String       @db.ObjectId
+  userId String       @db.ObjectId
 
-  chat   Chat   @relation(fields: [chatId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  chat   Chat         @relation(fields: [chatId], references: [id])
+  user   User         @relation(fields: [userId], references: [id])
 
   @@unique([chatId, userId])
 }
 
 model Chat {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
 
   participants    ChatParticipant[]
   messages        Message[]
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 }
 
 model CommunityMember {
-  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
 
-  role            String      @default("member")
-  chatAlerts      Boolean     @default(true)
-  newsAlerts      Boolean     @default(true)
+  role            String                @default("member")
+  chatAlerts      Boolean               @default(true)
+  newsAlerts      Boolean               @default(true)
   
-  userId          String      @db.ObjectId
-  communityId     String      @db.ObjectId
+  userId          String                @db.ObjectId
+  communityId     String                @db.ObjectId
 
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  community       Community   @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community       Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   messages        CommunityMessage[]
 
-  joinedAt        DateTime    @default(now())
+  events_created  Event[]               @relation("EventsCreatedByMember")
+  events_attendee EventParticipant[]
+
+  joinedAt        DateTime              @default(now())
 
   @@unique([userId, communityId])
 }
@@ -205,6 +208,8 @@ model Community {
 
   joinRequests  CommunityJoinRequest[]
 
+  events        Event[]
+
   createdAt     DateTime                @default(now())
 }
 
@@ -223,4 +228,47 @@ model CommunityJoinRequest {
   community     Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
 
   @@unique([userId, communityId])
+}
+
+model EventParticipant {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+
+  role            String              @default("participant")
+  
+  memberId        String              @db.ObjectId
+  eventId         String              @db.ObjectId
+
+  member          CommunityMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  event           Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  joinedAt        DateTime            @default(now())
+
+  @@unique([memberId, eventId])
+}
+
+model Event {
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
+
+  title           String
+  description     String
+  tags            String[]
+  coverImage      String
+
+  location_format String
+  location        String?
+
+  date            DateTime
+  all_day         Boolean
+  start_time      String?
+  end_time        String?
+
+  capacity        Int?
+  public          Boolean
+     
+  communityId     String                @db.ObjectId
+  creatorId       String?               @db.ObjectId
+
+  community       Community             @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  creator         CommunityMember?      @relation("EventsCreatedByMember", fields: [creatorId], references: [id], onDelete: SetNull)
+  participants    EventParticipant[]
 }
