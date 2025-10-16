@@ -72,6 +72,17 @@ export async function joinCommunity(communityId: string): Promise<boolean> {
   }
 }
 
+export async function hasRequested(
+  userId: string,
+  communityId: string
+): Promise<boolean> {
+  const request = await prisma.communityJoinRequest.findFirst({
+    where: { userId, communityId },
+  });
+  if (request) return true;
+  return false;
+}
+
 export async function sendJoinRequest(
   communityId: string,
   message?: string
@@ -112,6 +123,41 @@ export async function sendJoinRequest(
     return true;
   } catch (error) {
     console.error("Error sending join request:", error);
+    return false;
+  }
+}
+
+export async function approveJoinRequest(id: string): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) throw new Error("Unauthorized");
+    const request = await prisma.communityJoinRequest.findUnique({
+      where: { id },
+      select: {
+        community: { select: { id: true, members: true } },
+        userId: true,
+      },
+    });
+    if (!request) throw new Error("Invalid request");
+    const { community } = request;
+    const { members } = community;
+    const canManageCommunity = members.some(
+      (mem) =>
+        mem.userId === sessionUserId &&
+        (mem.role === "admin" || mem.role === "moderator")
+    );
+    if (!canManageCommunity) throw new Error("Unauthorized");
+    await prisma.communityMember.create({
+      data: {
+        user: { connect: { id: request.userId } },
+        community: { connect: { id: community.id } },
+      },
+    });
+    await prisma.communityJoinRequest.delete({ where: { id } });
+    return true;
+  } catch (err) {
+    console.error(err);
     return false;
   }
 }

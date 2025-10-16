@@ -10,17 +10,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/context/session-context";
-import { useDebounce } from "@/hooks/useDebounce";
 import { Community } from "@/lib/models/Community";
+import { Event } from "@/lib/models/Event";
 import {
   getCommunities,
   joinCommunity,
   sendJoinRequest,
 } from "@/lib/store/community";
+import { getEvents } from "@/lib/store/event";
 import {
   Calendar,
   CheckCircle,
@@ -32,7 +32,6 @@ import {
   Lock,
   MapPin,
   Plus,
-  Search,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -41,62 +40,6 @@ import Link from "next/link";
 import { redirect, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-
-// Mock data for upcoming events
-const upcomingEvents = [
-  {
-    id: 1,
-    title: "Tech Meetup 2024",
-    community: "Tech Innovators",
-    communityId: 1,
-    date: "2024-01-15",
-    time: "18:00",
-    location: "Downtown Convention Center",
-    attendees: 45,
-    maxAttendees: 100,
-    image: "/tech-meetup.png",
-    isOnline: false,
-  },
-  {
-    id: 2,
-    title: "Golden Hour Photography Walk",
-    community: "Photography Club",
-    communityId: 2,
-    date: "2024-01-12",
-    time: "17:30",
-    location: "Central Park",
-    attendees: 23,
-    maxAttendees: 30,
-    image: "/photography-walk.png",
-    isOnline: false,
-  },
-  {
-    id: 3,
-    title: "Weekend 5K Run",
-    community: "Local Runners",
-    communityId: 3,
-    date: "2024-01-14",
-    time: "07:00",
-    location: "Riverside Trail",
-    attendees: 18,
-    maxAttendees: 50,
-    image: "/running-5k.jpg",
-    isOnline: false,
-  },
-  {
-    id: 4,
-    title: "Virtual Tech Workshop",
-    community: "Tech Innovators",
-    communityId: 1,
-    date: "2024-01-16",
-    time: "19:00",
-    location: "Online",
-    attendees: 67,
-    maxAttendees: 200,
-    image: "/virtual-workshop.png",
-    isOnline: true,
-  },
-];
 
 // Mock data for discover communities
 const discoverCommunities = [
@@ -169,8 +112,6 @@ export default function CommunityPage() {
     handlers: { reload },
   } = useSession();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearch = useDebounce(searchQuery, 300);
   const [activeTab, setActiveTab] = useState("my-communities");
 
   const [communities, setCommunities] = useState<
@@ -182,6 +123,8 @@ export default function CommunityPage() {
   );
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
+
+  const [events, setEvents] = useState<Event[] | undefined | null>(undefined);
 
   const handleJoinClick = (community: Community) => {
     setSelectedCommunity(community);
@@ -212,17 +155,31 @@ export default function CommunityPage() {
 
   const fetchCommunities = useCallback(async () => {
     try {
-      const fetchedCommunities = await getCommunities(debouncedSearch);
+      const fetchedCommunities = await getCommunities();
       setCommunities(fetchedCommunities);
     } catch (error) {
       console.error(error);
       setCommunities(null);
     }
-  }, [debouncedSearch]);
+  }, []);
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const fetchedEvents = await getEvents();
+      setEvents(fetchedEvents || null);
+    } catch (err) {
+      console.error(err);
+      setEvents(null);
+    }
+  }, []);
 
   useEffect(() => {
     fetchCommunities();
   }, [fetchCommunities]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   if (loading) {
     return (
@@ -237,6 +194,14 @@ export default function CommunityPage() {
   }
 
   const userCommunities = session.profile.communities;
+
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = Number.parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
 
   return (
     <>
@@ -272,45 +237,6 @@ export default function CommunityPage() {
 
             {/* My Communities Tab */}
             <TabsContent value="my-communities" className="space-y-6">
-              {/* Search */}
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search for products"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 pr-4 h-14 text-lg bg-white border-blue-200 focus:border-blue-400 shadow-sm rounded-xl"
-                  />
-                  {searchQuery && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setSearchQuery("")}
-                    >
-                      <span className="sr-only">Clear search</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-400"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </Button>
-                  )}
-                </div>
-              </div>
-
               {/* Create Community Button */}
               <Link href="communities/create">
                 <Button className="bg-picton-blue-500 hover:opacity-90 hover:bg-celestial-blue-400 w-full sm:w-auto mb-6">
@@ -418,213 +344,152 @@ export default function CommunityPage() {
 
             {/* Events Tab */}
             <TabsContent value="events" className="space-y-6">
-              {/* Search */}
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search for products"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 pr-4 h-14 text-lg bg-white border-blue-200 focus:border-blue-400 shadow-sm rounded-xl"
-                  />
-                  {searchQuery && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setSearchQuery("")}
-                    >
-                      <span className="sr-only">Clear search</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-400"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </Button>
-                  )}
-                </div>
-              </div>
-
               {/* Events List */}
               <div className="flex flex-col gap-4">
-                {upcomingEvents.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/community/${event.communityId}/events/${event.id}`}
-                  >
-                    <Card className="group gap-2 pb-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] border-celestial-blue-50 overflow-hidden">
-                      <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6">
-                        {/* Event Image */}
-                        <div className="relative w-full sm:w-48 h-32 sm:h-auto rounded-lg overflow-hidden flex-shrink-0">
-                          <Image
-                            width={600}
-                            height={400}
-                            src={event.image || "/placeholder.png"}
-                            alt={event.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          {event.isOnline && (
-                            <Badge className="absolute top-2 right-2 bg-celestial-blue text-white">
-                              <Globe className="w-3 h-3 mr-1" />
-                              Online
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Event Details */}
-                        <div className="flex-1 space-y-3">
-                          <div>
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <h3 className="text-lg sm:text-xl font-bold group-hover:text-celestial-blue transition-colors line-clamp-1">
-                                {event.title}
-                              </h3>
-                              <ChevronRight className="w-5 h-5 text-celestial-blue group-hover:translate-x-1 transition-transform flex-shrink-0 mt-1" />
-                            </div>
-                            <p className="text-sm text-celestial-blue hover:underline inline-block">
-                              {event.community}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-4 h-4 text-celestial-blue" />
-                              <span>
-                                {new Date(event.date).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4 text-celestial-blue" />
-                              <span>{event.time}</span>
-                            </div>
-                            {!event.isOnline && (
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="w-4 h-4 text-celestial-blue" />
-                                <span className="line-clamp-1">
-                                  {event.location}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between pt-2">
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1.5">
-                                <Users className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-sm font-medium">
-                                  {event.attendees}/{event.maxAttendees}
-                                </span>
-                              </div>
-                              <div className="h-2 w-24 sm:w-32 bg-gray-200 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-celestial-blue to-picton-blue rounded-full transition-all duration-300"
-                                  style={{
-                                    width: `${
-                                      (event.attendees / event.maxAttendees) *
-                                      100
-                                    }%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
+                {events && events.length > 0 ? (
+                  events.map((event) => (
+                    <Link key={event.id} href={`/dashboard/events/${event.id}`}>
+                      <Card className="group gap-2 pb-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] border-celestial-blue-50 overflow-hidden">
+                        <div className="flex flex-col sm:flex-row gap-4 p-4 sm:p-6">
+                          {/* Event Image */}
+                          <div className="relative w-full sm:w-48 h-32 sm:h-auto rounded-lg overflow-hidden flex-shrink-0">
+                            <Image
+                              width={600}
+                              height={400}
+                              src={event.coverImage || "/placeholder.png"}
+                              alt={event.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <Badge
+                              className={`absolute top-3 right-3 ${
+                                event.location_format === "online"
+                                  ? "bg-green-500 text-white"
+                                  : "bg-blue-500 text-white"
+                              }`}
                             >
-                              <Heart className="w-4 h-4 mr-1" />
-                              Interested
-                            </Button>
+                              {event.location_format === "online"
+                                ? "🌐 Online"
+                                : "📍 In Person"}
+                            </Badge>
+                          </div>
+
+                          {/* Event Details */}
+                          <div className="flex-1 space-y-3">
+                            <div>
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h3 className="text-lg sm:text-xl font-bold group-hover:text-celestial-blue transition-colors line-clamp-1">
+                                  {event.title}
+                                </h3>
+                                <ChevronRight className="w-5 h-5 text-celestial-blue group-hover:translate-x-1 transition-transform flex-shrink-0 mt-1" />
+                              </div>
+                              <p className="text-sm text-celestial-blue hover:underline inline-block">
+                                {event.community.name}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="w-4 h-4 text-celestial-blue" />
+                                <span>
+                                  {new Date(event.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              {event.start_time && (
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="w-4 h-4 text-celestial-blue" />
+                                  <span>{formatTime(event.start_time)}</span>
+                                </div>
+                              )}
+                              {event.location_format === "in-person" && (
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="w-4 h-4 text-celestial-blue" />
+                                  <span className="line-clamp-1">
+                                    {event.location}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2">
+                              {event.capacity && (
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium">
+                                      {event._count.participants}/
+                                      {event.capacity}
+                                    </span>
+                                  </div>
+                                  <div className="h-2 w-24 sm:w-32 bg-gray-200 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-celestial-blue to-picton-blue rounded-full transition-all duration-300"
+                                      style={{
+                                        width: `${
+                                          (event._count.participants /
+                                            event.capacity) *
+                                          100
+                                        }%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <Heart className="w-4 h-4 mr-1" />
+                                Interested
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  </Link>
-                ))}
+                      </Card>
+                    </Link>
+                  ))
+                ) : events === undefined ? (
+                  <div className="flex flex-1 w-full h-full items-center justify-center">
+                    <Loader2 className="animate-spin" />
+                  </div>
+                ) : (
+                  <></>
+                )}
               </div>
 
-              {upcomingEvents.length === 0 && (
-                <Card className="border-dashed border-2 border-celestial-blue-50">
-                  <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 flex items-center justify-center mb-4">
-                      <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                      No Upcoming Events
-                    </h3>
-                    <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md">
-                      Join communities to see their upcoming events or create
-                      your own
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="border-celestial-blue text-celestial-blue hover:bg-celestial-blue-50 bg-transparent"
-                      onClick={() => setActiveTab("my-communities")}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      View My Communities
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              {!events ||
+                (events.length === 0 && (
+                  <Card className="border-dashed border-2 border-celestial-blue-50">
+                    <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                        <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-semibold mb-2">
+                        No Upcoming Events
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md">
+                        Join communities to see their upcoming events or create
+                        your own
+                      </p>
+                      <Button
+                        variant="outline"
+                        className="border-celestial-blue text-celestial-blue hover:bg-celestial-blue-50 bg-transparent"
+                        onClick={() => setActiveTab("my-communities")}
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        View My Communities
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
             </TabsContent>
 
             {/* Discover Tab */}
             <TabsContent value="discover" className="space-y-6">
-              {/* Search */}
-              <div className="mb-6">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Search for products"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 pr-4 h-14 text-lg bg-white border-blue-200 focus:border-blue-400 shadow-sm rounded-xl"
-                  />
-                  {searchQuery && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setSearchQuery("")}
-                    >
-                      <span className="sr-only">Clear search</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-400"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </Button>
-                  )}
-                </div>
-              </div>
-
               {/* Trending Section */}
               <div>
                 <div className="flex items-center gap-2 mb-4">

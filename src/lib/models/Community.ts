@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { eventSelect } from "./Event";
-import { userSelect } from "./User";
 
 export const communityMessageSelect =
   Prisma.validator<Prisma.CommunityMessageSelect>()({
@@ -24,7 +23,7 @@ export const communityMemberSelect =
   Prisma.validator<Prisma.CommunityMemberSelect>()({
     id: true,
     role: true,
-    user: { select: userSelect },
+    user: { select: { id: true, image: true, name: true, username: true } },
     joinedAt: true,
     userId: true,
   });
@@ -41,6 +40,14 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
   },
   events: { select: eventSelect },
   createdAt: true,
+  joinRequests: {
+    select: {
+      id: true,
+      message: true,
+      createdAt: true,
+      user: { select: { id: true, image: true, name: true, username: true } },
+    },
+  },
 });
 
 export type Community = Prisma.CommunityGetPayload<{

@@ -42,6 +42,8 @@ model User {
 
   communities             CommunityMember[]
   communityJoinRequests   CommunityJoinRequest[]
+  
+  events_attendee EventParticipant[]
 }
  
 model Account {
@@ -174,7 +176,6 @@ model CommunityMember {
   messages        CommunityMessage[]
 
   events_created  Event[]               @relation("EventsCreatedByMember")
-  events_attendee EventParticipant[]
 
   joinedAt        DateTime              @default(now())
 
@@ -235,15 +236,15 @@ model EventParticipant {
 
   role            String              @default("participant")
   
-  memberId        String              @db.ObjectId
+  userId          String              @db.ObjectId
   eventId         String              @db.ObjectId
 
-  member          CommunityMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   event           Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   joinedAt        DateTime            @default(now())
 
-  @@unique([memberId, eventId])
+  @@unique([userId, eventId])
 }
 
 model Event {

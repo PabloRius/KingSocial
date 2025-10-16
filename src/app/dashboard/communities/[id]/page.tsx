@@ -1,5 +1,6 @@
 "use client";
 
+import { JoinRequest } from "@/components/join-request";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,11 +27,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { Community, CommunityMessage } from "@/lib/models/Community";
+import { EventParticipant } from "@/lib/models/Event";
 import {
+  approveJoinRequest,
   deleteCommunityById,
   getCommunityById,
+  hasRequested,
+  sendJoinRequest,
   sendMessage,
 } from "@/lib/store/community";
+import { joinEvent } from "@/lib/store/event";
 import { getColorFromId } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -41,6 +47,7 @@ import {
   Crown,
   ImageIcon,
   Loader2,
+  Lock,
   MapPin,
   Megaphone,
   MessageSquare,
@@ -116,6 +123,10 @@ export default function CommunityDetailPage({
   const [settingsTab, setSettingsTab] = useState("general");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  const [showDialog, setShowDialog] = useState(false);
+  const [joinRequestMessage, setJoinRequestMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
   // Settings state
   const [communitySettings, setCommunitySettings] = useState({
     name: community?.name || "" || "",
@@ -138,6 +149,10 @@ export default function CommunityDetailPage({
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(
     null
   );
+
+  const [joinedEventsMock, setJoinedEventsMock] = useState<
+    Array<EventParticipant>
+  >(session?.profile.events_attendee || []);
 
   useEffect(() => {
     const initPage = async () => {
@@ -162,6 +177,11 @@ export default function CommunityDetailPage({
     initPage();
   }, [params]);
 
+  useEffect(() => {
+    if (session?.profile.events_attendee)
+      setJoinedEventsMock(session.profile.events_attendee);
+  }, [session?.profile.events_attendee]);
+
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center w-full">
@@ -185,6 +205,41 @@ export default function CommunityDetailPage({
   if (community === null) {
     return redirect("/dashboard/communities");
   }
+
+  const handleJoinEvent = async (eventId: string) => {
+    try {
+      await joinEvent(eventId, session.profile.id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleApproveJoinRequest = async (requestId: string) => {
+    try {
+      const approvedRequest = community.joinRequests.find(
+        (r) => r.id === requestId
+      );
+      if (!approvedRequest) return;
+
+      const res = await approveJoinRequest(requestId);
+
+      if (!res) {
+        setCommunity((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            joinRequests: [...prev.joinRequests, approvedRequest],
+            members: prev.members.filter(
+              (m) => m.user.id !== approvedRequest.user.id
+            ),
+          };
+        });
+        alert("Failed to approve join request.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const getRoleBadge = (role: string | undefined) => {
     switch (role) {
@@ -211,21 +266,21 @@ export default function CommunityDetailPage({
     }
   };
 
-  const { role: memberRole, id: memberId } =
-    session.profile.communities[
-      session.profile.communities.findIndex(
-        ({ community: commData }) => commData.id === community.id
-      )
-    ];
+  const memberData = session.profile.communities.find(
+    ({ community: commData }) => commData.id === community.id
+  );
 
-  if (!memberRole || !memberId) redirect("/dashboard/communities");
+  const memberRole = memberData?.role;
+  const memberId = memberData?.id;
+
+  const isPrivate = community.mode === "private";
 
   const canManageCommunity =
     memberRole === "admin" || memberRole === "moderator";
 
   const handleSendMessage = async () => {
     const trimmed = message.trim();
-    if (!trimmed || isSending) return;
+    if (!trimmed || isSending || !memberId) return;
 
     try {
       setIsSending(true);
@@ -271,6 +326,31 @@ export default function CommunityDetailPage({
       console.error("Error sending message:", error);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleSendJoinRequest = async () => {
+    try {
+      const hasRequestedRes = await hasRequested(
+        session.profile.id,
+        community.id
+      );
+      if (hasRequestedRes) {
+        return alert("You have already requested to join this community.");
+      }
+      setSending(true);
+      const res = await sendJoinRequest(community.id, joinRequestMessage);
+
+      if (!res) throw new Error("Failed to send join request");
+
+      setShowDialog(false);
+      setMessage("");
+      alert("Join request sent successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while sending your join request.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -381,247 +461,301 @@ export default function CommunityDetailPage({
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
+      {!memberId && isPrivate ? (
+        <div className="flex flex-col items-center justify-center text-center py-20 px-4">
+          <Lock className="w-12 h-12 text-yellow-500 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            This community is private
+          </h2>
+          <p className="text-gray-600 max-w-md mb-6">
+            You must send a join request to access{" "}
+            <span className="font-semibold">{community.name}</span>’s chat and
+            members.
+          </p>
+          <Button
+            onClick={() => setShowDialog(true)}
+            className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
           >
-            <TabsList className="w-full justify-start bg-transparent border-0 h-auto p-0">
-              <TabsTrigger
-                value="chat"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Chat
-              </TabsTrigger>
-              <TabsTrigger
-                value="news"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
-              >
-                <Megaphone className="w-4 h-4 mr-2" />
-                News
-              </TabsTrigger>
-              <TabsTrigger
-                value="events"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                Events
-              </TabsTrigger>
-              <TabsTrigger
-                value="members"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Members
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Send Join Request
+          </Button>
 
-      {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} className="w-full">
-          {/* Chat Tab */}
-          <TabsContent value="chat" className="mt-0">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Community Chat
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setNotificationsEnabled((prev) => ({
-                      ...prev,
-                      chat: !prev.chat,
-                    }))
-                  }
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  {notificationsEnabled.chat ? (
-                    <>
-                      <Bell className="w-4 h-4 mr-2" />
-                      Notifications On
-                    </>
-                  ) : (
-                    <>
-                      <BellOff className="w-4 h-4 mr-2" />
-                      Notifications Off
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Messages */}
-              {community.chat && community.chat.length > 0 ? (
-                <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto p-2">
-                  {community.chat.map((msg) => {
-                    const {
-                      content,
-                      createdAt,
-                      id: msgId,
-                      senderId,
-                      sender,
-                    } = msg;
-                    const { role, user } = sender || {};
-                    const { image, name, username } = user || {};
-
-                    const isOwnMessage = senderId === memberId;
-                    const messageColor = senderId
-                      ? getColorFromId(senderId)
-                      : "hsl(79 4.8% 60%)";
-
-                    return (
-                      <div
-                        key={msgId}
-                        className={`flex items-start gap-3 ${
-                          isOwnMessage ? "justify-end" : "justify-start"
-                        }`}
-                      >
-                        {/* Avatar (hide for your own messages) */}
-                        {!isOwnMessage && (
-                          <UserAvatar
-                            avatarUrl={image || undefined}
-                            name={name || username}
-                            className="flex-shrink-0"
-                          />
-                        )}
-
-                        {/* Message Bubble */}
-                        <div
-                          className={`flex flex-col max-w-[70%] ${
-                            isOwnMessage
-                              ? "items-end text-right"
-                              : "items-start text-left"
-                          }`}
-                        >
-                          {!isOwnMessage && (
-                            <div className="flex items-center gap-2 mb-1">
-                              <span
-                                className="font-semibold text-sm"
-                                style={{ color: messageColor }}
-                              >
-                                {username}
-                              </span>
-                              {role !== "member" && getRoleBadge(role)}
-                              <span className="text-xs text-gray-400">
-                                {formatTime(createdAt)}
-                              </span>
-                            </div>
-                          )}
-
-                          <div
-                            className={`px-4 py-2 rounded-2xl shadow-sm ${
-                              isOwnMessage
-                                ? "bg-gradient-to-r from-celestial-blue to-picton-blue text-white"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            <p className="break-words">{content}</p>
-                          </div>
-
-                          {/* Time below your own messages */}
-                          {isOwnMessage && (
-                            <span className="text-xs text-gray-400 mt-1">
-                              {formatTime(createdAt)}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Spacer to align layout */}
-                        {isOwnMessage && (
-                          <UserAvatar
-                            avatarUrl={image || undefined}
-                            name={name || username}
-                            className="flex-shrink-0"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </div>
-              ) : (
-                <div className="flex-1 text-center text-gray-500">
-                  No messages yet, be the first one to interact with the
-                  community!
-                </div>
-              )}
-
-              {/* Message Input */}
-              <div className="flex gap-2">
-                <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1"
+          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Send Join Request</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <Label htmlFor="message">Optional message</Label>
+                <Textarea
+                  id="message"
+                  value={joinRequestMessage}
+                  onChange={(e) => setJoinRequestMessage(e.target.value)}
+                  placeholder="Tell the admins why you'd like to join..."
+                  rows={4}
+                  className="resize-none"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <ImageIcon className="w-5 h-5" />
+              </div>
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                  Cancel
                 </Button>
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={handleSendJoinRequest}
+                  disabled={sending}
                   className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send
+                  {sending ? "Sending..." : "Send Request"}
                 </Button>
-              </div>
-            </Card>
-          </TabsContent>
-
-          {/* News Tab */}
-          <TabsContent value="news" className="mt-0">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  News & Announcements
-                </h2>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setNotificationsEnabled((prev) => ({
-                        ...prev,
-                        news: !prev.news,
-                      }))
-                    }
-                    className="text-gray-600 hover:text-gray-900"
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : (
+        <>
+          {/* Tabs Navigation */}
+          <div className="border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="w-full justify-start bg-transparent border-0 h-auto p-0">
+                  <TabsTrigger
+                    value="chat"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
                   >
-                    {notificationsEnabled.news ? (
-                      <>
-                        <Bell className="w-4 h-4 mr-2" />
-                        Notifications On
-                      </>
-                    ) : (
-                      <>
-                        <BellOff className="w-4 h-4 mr-2" />
-                        Notifications Off
-                      </>
-                    )}
-                  </Button>
-                  {canManageCommunity && (
-                    <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                      <Megaphone className="w-4 h-4 mr-2" />
-                      Post Announcement
-                    </Button>
-                  )}
-                </div>
-              </div>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="news"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
+                  >
+                    <Megaphone className="w-4 h-4 mr-2" />
+                    News
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="events"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Events
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="members"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Members
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </div>
 
-              {/* {newsAnnouncements.map((announcement) => {
+          {/* Tab Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Tabs value={activeTab} className="w-full">
+              {/* Chat Tab */}
+              <TabsContent value="chat" className="mt-0">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Community Chat
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setNotificationsEnabled((prev) => ({
+                          ...prev,
+                          chat: !prev.chat,
+                        }))
+                      }
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      {notificationsEnabled.chat ? (
+                        <>
+                          <Bell className="w-4 h-4 mr-2" />
+                          Notifications On
+                        </>
+                      ) : (
+                        <>
+                          <BellOff className="w-4 h-4 mr-2" />
+                          Notifications Off
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Messages */}
+                  {community.chat && community.chat.length > 0 ? (
+                    <div className="space-y-4 mb-6 max-h-[600px] overflow-y-auto p-2">
+                      {community.chat.map((msg) => {
+                        const {
+                          content,
+                          createdAt,
+                          id: msgId,
+                          senderId,
+                          sender,
+                        } = msg;
+                        const { role, user } = sender || {};
+                        const { image, name, username } = user || {};
+
+                        const isOwnMessage = senderId === memberId;
+                        const messageColor = senderId
+                          ? getColorFromId(senderId)
+                          : "hsl(79 4.8% 60%)";
+
+                        return (
+                          <div
+                            key={msgId}
+                            className={`flex items-start gap-3 ${
+                              isOwnMessage ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            {/* Avatar (hide for your own messages) */}
+                            {!isOwnMessage && (
+                              <UserAvatar
+                                avatarUrl={image || undefined}
+                                name={name || username}
+                                className="flex-shrink-0"
+                              />
+                            )}
+
+                            {/* Message Bubble */}
+                            <div
+                              className={`flex flex-col max-w-[70%] ${
+                                isOwnMessage
+                                  ? "items-end text-right"
+                                  : "items-start text-left"
+                              }`}
+                            >
+                              {!isOwnMessage && (
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span
+                                    className="font-semibold text-sm"
+                                    style={{ color: messageColor }}
+                                  >
+                                    {username}
+                                  </span>
+                                  {role !== "member" && getRoleBadge(role)}
+                                  <span className="text-xs text-gray-400">
+                                    {formatTime(createdAt)}
+                                  </span>
+                                </div>
+                              )}
+
+                              <div
+                                className={`px-4 py-2 rounded-2xl shadow-sm ${
+                                  isOwnMessage
+                                    ? "bg-gradient-to-r from-celestial-blue to-picton-blue text-white"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                <p className="break-words">{content}</p>
+                              </div>
+
+                              {/* Time below your own messages */}
+                              {isOwnMessage && (
+                                <span className="text-xs text-gray-400 mt-1">
+                                  {formatTime(createdAt)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Spacer to align layout */}
+                            {isOwnMessage && (
+                              <UserAvatar
+                                avatarUrl={image || undefined}
+                                name={name || username}
+                                className="flex-shrink-0"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  ) : (
+                    <div className="flex-1 text-center text-gray-500">
+                      No messages yet, be the first one to interact with the
+                      community!
+                    </div>
+                  )}
+
+                  {/* Message Input */}
+                  <div className="flex gap-2">
+                    <Input
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleSendMessage()
+                      }
+                      placeholder="Type a message..."
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-gray-600 hover:text-gray-900"
+                    >
+                      <ImageIcon className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      onClick={handleSendMessage}
+                      className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send
+                    </Button>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              {/* News Tab */}
+              <TabsContent value="news" className="mt-0">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      News & Announcements
+                    </h2>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setNotificationsEnabled((prev) => ({
+                            ...prev,
+                            news: !prev.news,
+                          }))
+                        }
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        {notificationsEnabled.news ? (
+                          <>
+                            <Bell className="w-4 h-4 mr-2" />
+                            Notifications On
+                          </>
+                        ) : (
+                          <>
+                            <BellOff className="w-4 h-4 mr-2" />
+                            Notifications Off
+                          </>
+                        )}
+                      </Button>
+                      {canManageCommunity && (
+                        <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                          <Megaphone className="w-4 h-4 mr-2" />
+                          Post Announcement
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* {newsAnnouncements.map((announcement) => {
                 const author = getMemberById(announcement.authorId);
                 if (!author) return null;
 
@@ -662,173 +796,234 @@ export default function CommunityDetailPage({
                   </Card>
                 );
               })} */}
-            </div>
-          </TabsContent>
+                </div>
+              </TabsContent>
 
-          {/* Events Tab */}
-          <TabsContent value="events" className="mt-0">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Community Events
-                </h2>
-                {canManageCommunity && (
-                  <Link href={`${community.id}/events/create`}>
-                    <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Create Event
-                    </Button>
-                  </Link>
-                )}
-              </div>
+              {/* Events Tab */}
+              <TabsContent value="events" className="mt-0">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Community Events
+                    </h2>
+                    {canManageCommunity && (
+                      <Link href={`${community.id}/events/create`}>
+                        <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Create Event
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {community.events.map((event) => (
-                  <Card
-                    key={event.id}
-                    className="overflow-hidden group hover:shadow-lg transition-all"
-                  >
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={event.coverImage || "/placeholder.png"}
-                        alt={event.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <Badge
-                        className={`absolute top-3 right-3 ${
-                          event.location_format === "online"
-                            ? "bg-green-500 text-white"
-                            : "bg-blue-500 text-white"
-                        }`}
-                      >
-                        {event.location_format === "online"
-                          ? "🌐 Online"
-                          : "📍 In Person"}
-                      </Badge>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
-                        {event.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                        {event.description}
-                      </p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            {formatDate(new Date(event.date))}
-                            {event.start_time
-                              ? ` at ${event.start_time}`
-                              : " all day"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          {event.location_format === "in-person" && (
-                            <>
-                              <MapPin className="w-4 h-4" />
-                              <span>{event.location}</span>
-                            </>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {community.events.map((event) => {
+                      const isAttending = joinedEventsMock.some(
+                        (ev) => ev.eventId === event.id
+                      );
+
+                      return (
+                        <Card
+                          key={event.id}
+                          className="overflow-hidden group hover:shadow-lg transition-all"
+                        >
+                          {/* --- Event Cover --- */}
+                          <div className="relative h-48 w-full">
+                            <Image
+                              src={event.coverImage || "/placeholder.png"}
+                              alt={event.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <Badge
+                              className={`absolute top-3 right-3 ${
+                                event.location_format === "online"
+                                  ? "bg-green-500 text-white"
+                                  : "bg-blue-500 text-white"
+                              }`}
+                            >
+                              {event.location_format === "online"
+                                ? "🌐 Online"
+                                : "📍 In Person"}
+                            </Badge>
+                          </div>
+
+                          {/* --- Card Body --- */}
+                          <div className="p-4">
+                            <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+                              {event.title}
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                              {event.description}
+                            </p>
+
+                            {/* --- Date & Location --- */}
+                            <div className="space-y-2 mb-4">
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Calendar className="w-4 h-4" />
+                                <span>
+                                  {formatDate(new Date(event.date))}
+                                  {event.start_time
+                                    ? ` at ${event.start_time}`
+                                    : " all day"}
+                                </span>
+                              </div>
+                              {event.location_format === "in-person" && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{event.location}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* --- Capacity Bar --- */}
+                            {event.capacity && (
+                              <div className="mb-4">
+                                <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                                  <span>
+                                    {event._count.participants} attending
+                                  </span>
+                                  <span>
+                                    {event.capacity - event._count.participants}{" "}
+                                    spots left
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
+                                    style={{
+                                      width: `${
+                                        (event._count.participants /
+                                          event.capacity) *
+                                        100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* --- Buttons --- */}
+                            <div className="flex gap-2">
+                              <Link href={`/dashboard/events/${event.id}`}>
+                                <Button className="flex-1 bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                                  View Details
+                                </Button>
+                              </Link>
+
+                              <Button
+                                variant={isAttending ? "outline" : "default"}
+                                disabled={isAttending}
+                                onClick={() => handleJoinEvent(event.id)}
+                                className={`flex-1 ${
+                                  isAttending
+                                    ? "border-green-500 text-green-600 hover:bg-green-50"
+                                    : "bg-green-500 hover:bg-green-600 text-white"
+                                }`}
+                              >
+                                {isAttending ? "Joined" : "Join Event"}
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Members Tab */}
+              <TabsContent value="members" className="mt-0">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Members ({community.members.length})
+                    </h2>
+                    {canManageCommunity && (
+                      <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Invite Members
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Other Members */}
+                    {community.members.map(({ user, role, joinedAt }) => (
+                      <Card key={user.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              avatarUrl={user.image || undefined}
+                              name={user.name || user.username}
+                            />
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {user.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                @{user.username}
+                              </p>
+                            </div>
+                          </div>
+                          {canManageCommunity && role === "member" && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem className="text-red-600">
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Remove Member
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           )}
                         </div>
-                      </div>
-                      {event.capacity && (
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                            <span>{event._count.participants} attending</span>
-                            <span>
-                              {event.capacity - event._count.participants} spots
-                              left
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
-                              style={{
-                                width: `${
-                                  (event._count.participants / event.capacity) *
-                                  100
-                                }%`,
-                              }}
+                        <div className="mt-3 flex items-center justify-between">
+                          {getRoleBadge(role)}
+                          <span className="text-xs text-gray-500">
+                            Joined {formatDate(joinedAt)}
+                          </span>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* ✅ Join Requests Section */}
+                  {canManageCommunity && community.joinRequests.length > 0 && (
+                    <div className="pt-10 border-t">
+                      <h3 className="text-xl font-bold text-gray-900 mb-4">
+                        Pending Join Requests ({community.joinRequests.length})
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {community.joinRequests.map(
+                          ({ id, user, message, createdAt }) => (
+                            <JoinRequest
+                              key={id}
+                              id={id}
+                              user={user}
+                              message={message || undefined}
+                              createdAt={createdAt}
+                              handleApproveJoinRequest={
+                                handleApproveJoinRequest
+                              }
                             />
-                          </div>
-                        </div>
-                      )}
-                      <Button className="w-full bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                        View Details
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Members Tab */}
-          <TabsContent value="members" className="mt-0">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Members ({community.members.length})
-                </h2>
-                {canManageCommunity && (
-                  <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Invite Members
-                  </Button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Other Members */}
-                {community.members.map(({ user, role, joinedAt }) => (
-                  <Card key={user.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar
-                          avatarUrl={user.image || undefined}
-                          name={user.name || user.username}
-                        />
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {user.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            @{user.username}
-                          </p>
-                        </div>
+                          )
+                        )}
                       </div>
-                      {canManageCommunity && role === "member" && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Remove Member
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
                     </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      {getRoleBadge(role)}
-                      <span className="text-xs text-gray-500">
-                        Joined {formatDate(joinedAt)}
-                      </span>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </>
+      )}
+
       {/* Settings Modal */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1094,17 +1289,19 @@ export default function CommunityDetailPage({
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSaveSettings}
-              className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
+          {settingsTab !== "danger" && (
+            <DialogFooter className="mt-6">
+              <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveSettings}
+                className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 

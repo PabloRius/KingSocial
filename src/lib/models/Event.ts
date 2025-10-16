@@ -1,6 +1,18 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+export const eventParticipantSelect =
+  Prisma.validator<Prisma.EventParticipantSelect>()({
+    id: true,
+    eventId: true,
+    role: true,
+    userId: true,
+  });
+
+export type EventParticipant = Prisma.EventParticipantGetPayload<{
+  select: typeof eventParticipantSelect;
+}>;
+
 export const eventSelect = Prisma.validator<Prisma.EventSelect>()({
   id: true,
   title: true,
@@ -9,8 +21,22 @@ export const eventSelect = Prisma.validator<Prisma.EventSelect>()({
   tags: true,
   public: true,
 
+  creatorId: true,
+  creator: { select: { user: { select: { id: true } } } },
+
   capacity: true,
   _count: { select: { participants: true } },
+  participants: {
+    select: {
+      id: true,
+      role: true,
+      user: { select: { image: true, name: true, username: true, id: true } },
+    },
+  },
+
+  community: {
+    select: { id: true, name: true, coverImage: true, description: true },
+  },
 
   location_format: true,
   location: true,

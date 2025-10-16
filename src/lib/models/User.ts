@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { eventParticipantSelect } from "./Event";
 import { productSelect } from "./Product";
 
 export const userSelect = Prisma.validator<Prisma.UserSelect>()({
@@ -30,6 +31,7 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
       id: true,
     },
   },
+  events_attendee: { select: eventParticipantSelect },
 });
 
 export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
