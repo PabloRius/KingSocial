@@ -27,7 +27,6 @@ import {
   ChevronRight,
   Clock,
   Globe,
-  Heart,
   Loader2,
   Lock,
   MapPin,
@@ -42,68 +41,68 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Mock data for discover communities
-const discoverCommunities = [
-  {
-    id: 4,
-    name: "Book Lovers Unite",
-    description: "Discuss your favorite books and discover new ones",
-    members: 2156,
-    image: "/books-reading.jpg",
-    category: "Literature",
-    isPrivate: false,
-    trending: true,
-  },
-  {
-    id: 5,
-    name: "Startup Founders",
-    description: "Network with fellow entrepreneurs",
-    members: 1834,
-    image: "/startup-business.png",
-    category: "Business",
-    isPrivate: false,
-    trending: true,
-  },
-  {
-    id: 6,
-    name: "Yoga & Mindfulness",
-    description: "Practice yoga and meditation together",
-    members: 978,
-    image: "/yoga-meditation.png",
-    category: "Health & Wellness",
-    isPrivate: false,
-    trending: false,
-  },
-  {
-    id: 7,
-    name: "Gaming Guild",
-    description: "Connect with gamers worldwide",
-    members: 3421,
-    image: "/gaming-setup.png",
-    category: "Gaming",
-    isPrivate: false,
-    trending: true,
-  },
-  {
-    id: 8,
-    name: "Urban Gardeners",
-    description: "Growing green spaces in the city",
-    members: 645,
-    image: "/urban-garden.png",
-    category: "Lifestyle",
-    isPrivate: false,
-    trending: false,
-  },
-  {
-    id: 9,
-    name: "Music Producers",
-    description: "Create, share, and collaborate on music",
-    members: 1523,
-    image: "/music-production-setup.png",
-    category: "Music",
-    isPrivate: true,
-    trending: false,
-  },
-];
+// const discoverCommunities = [
+//   {
+//     id: 4,
+//     name: "Book Lovers Unite",
+//     description: "Discuss your favorite books and discover new ones",
+//     members: 2156,
+//     image: "/books-reading.jpg",
+//     category: "Literature",
+//     isPrivate: false,
+//     trending: true,
+//   },
+//   {
+//     id: 5,
+//     name: "Startup Founders",
+//     description: "Network with fellow entrepreneurs",
+//     members: 1834,
+//     image: "/startup-business.png",
+//     category: "Business",
+//     isPrivate: false,
+//     trending: true,
+//   },
+//   {
+//     id: 6,
+//     name: "Yoga & Mindfulness",
+//     description: "Practice yoga and meditation together",
+//     members: 978,
+//     image: "/yoga-meditation.png",
+//     category: "Health & Wellness",
+//     isPrivate: false,
+//     trending: false,
+//   },
+//   {
+//     id: 7,
+//     name: "Gaming Guild",
+//     description: "Connect with gamers worldwide",
+//     members: 3421,
+//     image: "/gaming-setup.png",
+//     category: "Gaming",
+//     isPrivate: false,
+//     trending: true,
+//   },
+//   {
+//     id: 8,
+//     name: "Urban Gardeners",
+//     description: "Growing green spaces in the city",
+//     members: 645,
+//     image: "/urban-garden.png",
+//     category: "Lifestyle",
+//     isPrivate: false,
+//     trending: false,
+//   },
+//   {
+//     id: 9,
+//     name: "Music Producers",
+//     description: "Create, share, and collaborate on music",
+//     members: 1523,
+//     image: "/music-production-setup.png",
+//     category: "Music",
+//     isPrivate: true,
+//     trending: false,
+//   },
+// ];
 
 export default function CommunityPage() {
   const {
@@ -435,17 +434,6 @@ export default function CommunityPage() {
                                   </div>
                                 </div>
                               )}
-                              <Button
-                                size="sm"
-                                className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <Heart className="w-4 h-4 mr-1" />
-                                Interested
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -491,7 +479,7 @@ export default function CommunityPage() {
             {/* Discover Tab */}
             <TabsContent value="discover" className="space-y-6">
               {/* Trending Section */}
-              <div>
+              {/*<div>
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="w-5 h-5 text-celestial-blue" />
                   <h2 className="text-xl font-bold">Trending Communities</h2>
@@ -568,7 +556,7 @@ export default function CommunityPage() {
                       </Link>
                     ))}
                 </div>
-              </div>
+              </div>*/}
 
               {/* All Communities */}
               <div>

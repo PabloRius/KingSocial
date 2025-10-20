@@ -103,12 +103,14 @@ export async function sendMessageWithFallback(
     let chatId = message.chatId;
 
     if (!chatId && message.receiverId) {
-      // Look for an existing 1-to-1 chat
       const existingChat = await prisma.chat.findFirst({
         where: {
           participants: {
-            every: {
-              OR: [{ userId: sessionUserId }, { userId: message.receiverId }],
+            some: { userId: sessionUserId },
+          },
+          AND: {
+            participants: {
+              some: { userId: message.receiverId },
             },
           },
         },
@@ -140,6 +142,9 @@ export async function sendMessageWithFallback(
         chat: { connect: { id: chatId } },
         ...(message.productRefId && {
           productRef: { connect: { id: message.productRefId } },
+        }),
+        ...(message.eventRefId && {
+          eventRef: { connect: { id: message.eventRefId } },
         }),
       },
     });

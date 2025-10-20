@@ -172,3 +172,13 @@
 button {
   cursor: pointer;
 }
+
+.scroll-area-fix
+  [data-radix-scroll-area-viewport]
+  > div[style*="display: table"] {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}

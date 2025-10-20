@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import prisma from "@/prisma";
 import { Event, EventCreatePayload, eventSelect } from "../models/Event";
+import { sendMessageWithFallback } from "./chat";
 
 export async function createEvent(
   event: EventCreatePayload,
@@ -137,6 +138,66 @@ export async function joinEvent(
     return true;
   } catch (err) {
     console.error("❌ Error joining event:", err);
+    return false;
+  }
+}
+
+export async function messageAttendees(
+  content: string,
+  eventId: string,
+  senderId: string
+): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+
+    if (!sessionUserId || sessionUserId !== senderId) {
+      throw new Error("Unauthorized");
+    }
+
+    const event = await getEventById(eventId);
+    if (!event) throw new Error("Error finding event");
+    const { participants } = event;
+    if (!participants?.length) throw new Error("No participants found");
+
+    const senderParticipant = participants.find((p) => p.user.id === senderId);
+
+    if (!senderParticipant) {
+      throw new Error("Sender is not a participant of this event");
+    }
+
+    if (!["admin", "moderator"].includes(senderParticipant.role)) {
+      throw new Error("Only admins or moderators can send mass messages");
+    }
+
+    const recipients = participants.filter(
+      (p) => p.user.id !== senderId && p.allowsMassMessages
+    );
+    if (!recipients.length) {
+      console.warn("No recipients allow mass messages.");
+      return true;
+    }
+
+    await Promise.all(
+      recipients.map(async (participant) => {
+        try {
+          await sendMessageWithFallback({
+            content,
+            senderId,
+            receiverId: participant.user.id,
+            eventRefId: eventId,
+          });
+        } catch (err) {
+          console.error(
+            `❌ Error sending message to ${participant.user.id}:`,
+            err
+          );
+        }
+      })
+    );
+    return true;
+  } catch (err) {
+    console.error("❌ Error sending mass message:", err);
     return false;
   }
 }

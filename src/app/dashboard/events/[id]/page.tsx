@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { Event } from "@/lib/models/Event";
-import { getEventById } from "@/lib/store/event";
+import { getEventById, messageAttendees } from "@/lib/store/event";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -45,6 +45,7 @@ import {
 import Image from "next/image";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function EventDetailPage({
   params,
@@ -224,20 +225,21 @@ export default function EventDetailPage({
     console.log("Removing attendee:", attendeeId);
   };
 
-  const handleSendMessageToAll = () => {
+  const handleSendMessageToAll = async () => {
     if (!messageToAll.trim()) return;
 
     setSendingMessage(true);
-    // In a real app, call API to send message to all attendees
-    console.log("Sending message to all attendees:", messageToAll);
 
-    // Simulate API call
-    setTimeout(() => {
-      setSendingMessage(false);
-      setMessageToAll("");
-      setShowMessageModal(false);
-      // Show success notification
-    }, 1500);
+    const res = await messageAttendees(
+      messageToAll,
+      event.id,
+      session.profile.id
+    );
+    if (!res) {
+      toast.error("Error sending the mass message");
+      return;
+    }
+    setSendingMessage(false);
   };
 
   const handleDeleteEvent = () => {
@@ -247,10 +249,9 @@ export default function EventDetailPage({
   };
 
   const handleShare = () => {
-    // In a real app, implement share functionality
     const url = `${window.location.origin}/dashboard/events/${event.id}`;
     navigator.clipboard.writeText(url);
-    console.log("Copied event link:", url);
+    toast.info("Event URL copied to clipboard");
   };
 
   return (

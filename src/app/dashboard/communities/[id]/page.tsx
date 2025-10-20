@@ -208,7 +208,18 @@ export default function CommunityDetailPage({
 
   const handleJoinEvent = async (eventId: string) => {
     try {
-      await joinEvent(eventId, session.profile.id);
+      const res = await joinEvent(eventId, session.profile.id);
+      if (res) {
+        setJoinedEventsMock((prev) => [
+          ...prev,
+          {
+            eventId: eventId,
+            id: crypto.randomUUID(),
+            role: "attendee",
+            userId: session.profile.id,
+          },
+        ]);
+      }
     } catch (err) {
       console.error(err);
     }

@@ -10,8 +10,11 @@ import { getChatsFromUserId, sendMessage } from "@/lib/store/chat";
 import { format, isToday, isYesterday } from "date-fns";
 import {
   ArrowLeft,
+  Calendar,
   ExternalLink,
+  Globe,
   Loader2,
+  MapPin,
   MoreVertical,
   Search,
   Send,
@@ -143,6 +146,22 @@ export default function InboxPage() {
     redirect("/");
   }
 
+  const formatEventDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatEventTime = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = Number.parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
   return (
     <div className="flex bg-gradient-to-br from-blue-50 via-white to-purple-50 h-[calc(100vh-100px)] md:h-[calc(100vh-100px)] overflow-hidden">
       {/* Chat List Sidebar */}
@@ -165,8 +184,8 @@ export default function InboxPage() {
         </div>
 
         {/* Chat List */}
-        <ScrollArea className="overflow-hidden">
-          <div className="divide-y divide-gray-100">
+        <ScrollArea className="scroll-area-fix max-w-full w-full overflow-hidden">
+          <div className="divide-y divide-gray-100 w-full">
             {filteredChats.map((chat) => (
               <button
                 key={chat.id}
@@ -219,7 +238,7 @@ export default function InboxPage() {
                     </span>
                   </div>
                   {chat.messages.length > 0 && (
-                    <div className="flex items-left justify-between">
+                    <div className="flex items-left justify-between min-w-0">
                       <p className="text-sm text-gray-600 truncate">
                         {(() => {
                           const lastMessage = chat.messages.at(-1);
@@ -351,6 +370,8 @@ export default function InboxPage() {
                     dateLabel = format(msgDate, "dd/MM/yyyy");
                   }
 
+                  console.log(msg);
+
                   return (
                     <div key={msg.id}>
                       {/* Date separator */}
@@ -403,6 +424,67 @@ export default function InboxPage() {
                                   <p className="text-lg font-bold text-blue-600 mt-1">
                                     ${msg.productRef.price}
                                   </p>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
+
+                          {/* Event Reference Card */}
+                          {msg.eventRef && (
+                            <Link
+                              href={`/community/${msg.eventRef.community.id}/events/${msg.eventRef.id}`}
+                              className="block mb-2 bg-white border border-blue-200 rounded-lg p-3 hover:shadow-md transition-all group"
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors mb-1">
+                                      {msg.eventRef.title}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                      from{" "}
+                                      <span className="font-medium">
+                                        {msg.eventRef.community.name}
+                                      </span>
+                                    </p>
+                                  </div>
+                                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-blue-600 flex-shrink-0" />
+                                </div>
+
+                                <div className="flex items-center gap-3 text-xs text-gray-600">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3 text-blue-600" />
+                                    <span>
+                                      {formatEventDate(msg.eventRef.date)}
+                                    </span>
+                                  </div>
+                                  {!msg.eventRef.all_day &&
+                                    msg.eventRef.start_time && (
+                                      <div className="flex items-center gap-1">
+                                        <span>•</span>
+                                        <span>
+                                          {formatEventTime(
+                                            msg.eventRef.start_time
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-1 text-xs text-gray-600">
+                                  {msg.eventRef.location_format === "online" ? (
+                                    <>
+                                      <Globe className="w-3 h-3 text-green-600" />
+                                      <span>Online Event</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MapPin className="w-3 h-3 text-blue-600" />
+                                      <span className="truncate">
+                                        {msg.eventRef.location}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </Link>

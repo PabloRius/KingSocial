@@ -30,6 +30,7 @@ export const eventSelect = Prisma.validator<Prisma.EventSelect>()({
     select: {
       id: true,
       role: true,
+      allowsMassMessages: true,
       user: { select: { image: true, name: true, username: true, id: true } },
     },
   },
