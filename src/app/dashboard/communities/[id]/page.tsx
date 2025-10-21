@@ -49,7 +49,6 @@ import {
   Loader2,
   Lock,
   MapPin,
-  Megaphone,
   MessageSquare,
   MoreVertical,
   Send,
@@ -65,36 +64,6 @@ import Link from "next/link";
 import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-
-// const newsAnnouncements = [
-//   {
-//     id: "1",
-//     authorId: "1",
-//     title: "New Workshop Series Announcement",
-//     content:
-//       "We are excited to announce a new workshop series on AI and Machine Learning starting next month. Stay tuned for registration details!",
-//     timestamp: "2024-03-10T14:00:00",
-//     pinned: true,
-//   },
-//   {
-//     id: "2",
-//     authorId: "3",
-//     title: "Community Guidelines Update",
-//     content:
-//       "We have updated our community guidelines to ensure a respectful and inclusive environment for all members. Please review them in the settings.",
-//     timestamp: "2024-03-05T09:00:00",
-//     pinned: false,
-//   },
-//   {
-//     id: "3",
-//     authorId: "1",
-//     title: "March Meetup Recap",
-//     content:
-//       "Thank you to everyone who attended our March meetup! We had over 50 participants and great discussions. Check out the photos in the events section.",
-//     timestamp: "2024-03-01T16:00:00",
-//     pinned: false,
-//   },
-// ];
 
 export default function CommunityDetailPage({
   params,
@@ -133,10 +102,6 @@ export default function CommunityDetailPage({
     description: community?.description || "",
     coverImage: community?.coverImage || "",
     mode: community?.mode || "",
-    whoCanPostNews: "admins-only" as
-      | "admins-only"
-      | "moderators-and-admins"
-      | "all-members",
     whoCanCreateEvents: "admins-only" as
       | "admins-only"
       | "moderators-and-admins"
@@ -541,13 +506,6 @@ export default function CommunityDetailPage({
                     Chat
                   </TabsTrigger>
                   <TabsTrigger
-                    value="news"
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
-                  >
-                    <Megaphone className="w-4 h-4 mr-2" />
-                    News
-                  </TabsTrigger>
-                  <TabsTrigger
                     value="events"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-celestial-blue rounded-none bg-transparent px-6 py-4"
                   >
@@ -724,90 +682,6 @@ export default function CommunityDetailPage({
                     </Button>
                   </div>
                 </Card>
-              </TabsContent>
-
-              {/* News Tab */}
-              <TabsContent value="news" className="mt-0">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      News & Announcements
-                    </h2>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          setNotificationsEnabled((prev) => ({
-                            ...prev,
-                            news: !prev.news,
-                          }))
-                        }
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        {notificationsEnabled.news ? (
-                          <>
-                            <Bell className="w-4 h-4 mr-2" />
-                            Notifications On
-                          </>
-                        ) : (
-                          <>
-                            <BellOff className="w-4 h-4 mr-2" />
-                            Notifications Off
-                          </>
-                        )}
-                      </Button>
-                      {canManageCommunity && (
-                        <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                          <Megaphone className="w-4 h-4 mr-2" />
-                          Post Announcement
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* {newsAnnouncements.map((announcement) => {
-                const author = getMemberById(announcement.authorId);
-                if (!author) return null;
-
-                return (
-                  <Card key={announcement.id} className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage
-                            src={author.avatar || "/placeholder.svg"}
-                            alt={author.name}
-                          />
-                          <AvatarFallback>{author.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-900">
-                              {author.name}
-                            </span>
-                            {author.role !== "member" &&
-                              getRoleBadge(author.role)}
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(new Date(announcement.timestamp))}
-                          </span>
-                        </div>
-                      </div>
-                      {announcement.pinned && (
-                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                          Pinned
-                        </Badge>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {announcement.title}
-                    </h3>
-                    <p className="text-gray-700">{announcement.content}</p>
-                  </Card>
-                );
-              })} */}
-                </div>
               </TabsContent>
 
               {/* Events Tab */}
@@ -1133,34 +1007,6 @@ export default function CommunityDetailPage({
                   <h3 className="text-lg font-semibold">Content Creation</h3>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Who can post news announcements?</Label>
-                        <p className="text-sm text-gray-500">
-                          Control who can create news posts
-                        </p>
-                      </div>
-                      <select
-                        value={communitySettings.whoCanPostNews}
-                        onChange={(e) =>
-                          setCommunitySettings({
-                            ...communitySettings,
-                            whoCanPostNews: e.target
-                              .value as typeof communitySettings.whoCanPostNews,
-                          })
-                        }
-                        className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-celestial-blue"
-                      >
-                        <option value="admins-only">Admins Only</option>
-                        <option value="moderators-and-admins">
-                          Moderators & Admins
-                        </option>
-                        <option value="all-members">All Members</option>
-                      </select>
-                    </div>
-
-                    <Separator />
-
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <Label>Who can create events?</Label>
