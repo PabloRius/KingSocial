@@ -282,8 +282,8 @@ export default function CommunityPage() {
                               </Badge>
                             </div>
                           </div>
-                          <CardContent className="p-4">
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          <CardContent className="flex flex-col flex-1 p-4">
+                            <p className="flex-1 text-sm text-muted-foreground line-clamp-2 mb-3">
                               {community.description}
                             </p>
                             <div className="flex items-center justify-between">
@@ -573,7 +573,7 @@ export default function CommunityPage() {
                           key={community.id}
                           href={`communities/${community.id}`}
                         >
-                          <Card className="group gap-2 pb-2  relative overflow-hidden border-celestial-blue/20 hover:border-celestial-blue/50 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] rounded-2xl bg-white/70 backdrop-blur-sm">
+                          <Card className="group h-full gap-2 pb-2  relative overflow-hidden border-celestial-blue/20 hover:border-celestial-blue/50 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] rounded-2xl bg-white/70 backdrop-blur-sm">
                             {/* Cover */}
                             <div className="relative h-44 sm:h-52 overflow-hidden">
                               <Image
@@ -614,8 +614,8 @@ export default function CommunityPage() {
                             </div>
 
                             {/* Details */}
-                            <CardContent className="p-4">
-                              <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                            <CardContent className="flex flex-col p-4 flex-1">
+                              <p className="flex-1 text-sm text-muted-foreground line-clamp-2 mb-4">
                                 {community.description}
                               </p>
 

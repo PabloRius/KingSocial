@@ -33,6 +33,7 @@ import {
   deleteCommunityById,
   getCommunityById,
   hasRequested,
+  joinCommunity,
   sendJoinRequest,
   sendMessage,
 } from "@/lib/store/community";
@@ -376,6 +377,19 @@ export default function CommunityDetailPage({
     });
   };
 
+  const handleJoinClick = async () => {
+    try {
+      const res = await joinCommunity(community.id);
+      if (!res)
+        return toast.error("Error joining the community, try again later");
+      await reload();
+      return toast.success("Successfully joined the community");
+    } catch (err) {
+      console.error(err);
+      return toast.error("Error joining the community, try again later");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header with Cover Image */}
@@ -408,6 +422,20 @@ export default function CommunityDetailPage({
             className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 backdrop-blur-sm"
           >
             <Settings className="w-5 h-5" />
+          </Button>
+        )}
+
+        {!memberId && !isPrivate && (
+          <Button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleJoinClick();
+            }}
+            size="sm"
+            className="absolute top-4 right-4 bg-gradient-to-r from-celestial-blue to-picton-blue text-white hover:opacity-90 rounded-full"
+          >
+            Join
           </Button>
         )}
 
