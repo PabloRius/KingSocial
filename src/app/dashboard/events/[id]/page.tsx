@@ -240,6 +240,7 @@ export default function EventDetailPage({
       return;
     }
     setSendingMessage(false);
+    setShowMessageModal(false);
   };
 
   const handleDeleteEvent = () => {
