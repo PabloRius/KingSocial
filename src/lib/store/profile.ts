@@ -2,7 +2,7 @@
 
 import { User, userSelect } from "@/lib/models/User";
 import prisma from "@/prisma";
-import { deleteFromCloudinary } from "../cloudinary";
+import { deleteFromCloudinary } from "../cloudinary_utils";
 import { removeListingById } from "./marketplace";
 
 export async function getProfileById(id: string): Promise<User | null> {
