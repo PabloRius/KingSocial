@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { GetProfile } from "@/lib/actions/profile";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary } from "@/lib/cloudinary_utils";
 import prisma from "@/prisma";
 import { categories, conditions } from "@/types/types";
 import { NextRequest, NextResponse } from "next/server";
