@@ -131,7 +131,7 @@ export default function CreateCommunityPage() {
       {/* Header */}
       <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link href="/community">
+          <Link href="/dashboard/communities">
             <Button variant="ghost" size="icon" className="rounded-full">
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -311,7 +311,7 @@ export default function CreateCommunityPage() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-            <Link href="/community">
+            <Link href="/dashboard/communities">
               <Button
                 type="button"
                 variant="outline"

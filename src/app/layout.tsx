@@ -1,4 +1,3 @@
-import { FloatingBackButton } from "@/components/floating-back-button";
 import { SessionProvider } from "@/context/session-context";
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
@@ -86,7 +85,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <SessionProvider>{children}</SessionProvider>
-        <FloatingBackButton />
         <Toaster />
       </body>
       <Analytics />
