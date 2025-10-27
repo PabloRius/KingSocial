@@ -1,5 +1,8 @@
 import { auth } from "@/auth";
-import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "@/lib/cloudinary_utils";
 import prisma from "@/prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
