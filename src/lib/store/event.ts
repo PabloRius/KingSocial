@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import prisma from "@/prisma";
 import { Event, EventCreatePayload, eventSelect } from "../models/Event";
+import { cosineSimilarity } from "../openai";
 import { sendMessageWithFallback } from "./chat";
 
 export async function createEvent(
@@ -200,4 +201,35 @@ export async function messageAttendees(
     console.error("❌ Error sending mass message:", err);
     return false;
   }
+}
+
+export async function getRecommendedEvents(
+  userId: string,
+  limit = 5
+): Promise<Array<Event>> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { embedding: true },
+  });
+  if (!user?.embedding) return [];
+
+  const events = await prisma.event.findMany({
+    where: { date: { gte: new Date() } },
+    select: eventSelect,
+  });
+
+  const scored = events
+    .filter((e) => e.embedding)
+    .map((e) => ({
+      ...e,
+      score: cosineSimilarity(
+        user.embedding as number[],
+        e.embedding as number[]
+      ),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .slice(0, limit);
+
+  return scored;
 }

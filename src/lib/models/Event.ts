@@ -46,6 +46,8 @@ export const eventSelect = Prisma.validator<Prisma.EventSelect>()({
   all_day: true,
   start_time: true,
   end_time: true,
+
+  embedding: true,
 });
 
 export type Event = Prisma.EventGetPayload<{

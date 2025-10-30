@@ -43,7 +43,11 @@ model User {
   communities             CommunityMember[]
   communityJoinRequests   CommunityJoinRequest[]
   
-  events_attendee EventParticipant[]
+  events_attendee         EventParticipant[]
+
+  // AI fields
+  interests               String []
+  embedding               Json?
 }
  
 model Account {
@@ -215,6 +219,9 @@ model Community {
   events        Event[]
 
   createdAt     DateTime                @default(now())
+  
+  // AI fields
+  embedding       Json?
 }
 
 model CommunityJoinRequest {
@@ -278,4 +285,7 @@ model Event {
   participants    EventParticipant[]
 
   references      Message[]
+
+  // AI fields
+  embedding       Json?
 }
