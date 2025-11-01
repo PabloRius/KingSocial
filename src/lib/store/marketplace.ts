@@ -98,7 +98,6 @@ export async function getMarketplaceCount(
         ...(sellerId ? { sellerId: { not: sellerId } } : {}),
       },
     });
-    console.log(count);
     return count;
   } catch (error) {
     console.error(error);

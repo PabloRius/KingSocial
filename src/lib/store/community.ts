@@ -197,6 +197,16 @@ export async function getCommunities(
   }
 }
 
+export async function getCommunitiesCount(): Promise<number | null> {
+  try {
+    const count = await prisma.product.count();
+    return count;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
 export async function getCommunityById(id: string): Promise<Community | null> {
   try {
     const community = await prisma.community.findUnique({

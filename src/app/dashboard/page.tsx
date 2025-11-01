@@ -4,6 +4,7 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSession } from "@/context/session-context";
+import { getCommunitiesCount } from "@/lib/store/community";
 import { getMarketplaceCount } from "@/lib/store/marketplace";
 import {
   ArrowRight,
@@ -20,15 +21,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 
-function formatCount(count: number | null) {
+function formatCount(count: number | null, tag: string, tagPlural?: string) {
   if (count === null) return null;
   if (count >= 1000) return `${(count / 1000).toFixed(1)}k+ items`;
-  return `${count} items`;
+  return `${count} ${count !== 1 ? tagPlural || tag + "s" : tag}`;
 }
 
 export default function DashboardPage() {
   const { session } = useSession();
   const [marketplaceCount, setMarketplaceCount] = useState<number | null>(null);
+  const [communitiesCount, setCommunitiesCount] = useState<number | null>(null);
 
   if (!session?.profile) redirect("/");
 
@@ -42,7 +44,17 @@ export default function DashboardPage() {
         setMarketplaceCount(null);
       }
     };
+    const fetchCommunitiesCount = async () => {
+      try {
+        const res = await getCommunitiesCount();
+        setCommunitiesCount(res);
+      } catch (error) {
+        console.error(error);
+        setCommunitiesCount(null);
+      }
+    };
     fetchMarketplaceCount();
+    fetchCommunitiesCount();
   }, []);
 
   const featuredModules = [
@@ -54,7 +66,7 @@ export default function DashboardPage() {
       icon: ShoppingBag,
       gradient: "from-blue-500 to-cyan-500",
       href: "/dashboard/marketplace",
-      stats: formatCount(marketplaceCount),
+      stats: formatCount(marketplaceCount, "item"),
     },
     {
       id: "communities",
@@ -64,7 +76,7 @@ export default function DashboardPage() {
       icon: Users,
       gradient: "from-purple-500 to-pink-500",
       href: "/dashboard/communities",
-      stats: "156 communities",
+      stats: formatCount(communitiesCount, "community", "communities"),
     },
   ];
 
