@@ -298,3 +298,27 @@ export async function deleteCommunityById(id: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function getUserCommunities(
+  userId: string
+): Promise<Array<Community> | null> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+    if (!sessionUserId) throw new Error("Unauthorized");
+
+    const communities = await prisma.community.findMany({
+      where: {
+        members: {
+          some: { userId },
+        },
+      },
+      select: communitySelect,
+    });
+
+    return communities;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}

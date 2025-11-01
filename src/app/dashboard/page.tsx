@@ -4,7 +4,8 @@ import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSession } from "@/context/session-context";
-import { getCommunitiesCount } from "@/lib/store/community";
+import { Community } from "@/lib/models/Community";
+import { getCommunitiesCount, getUserCommunities } from "@/lib/store/community";
 import { getMarketplaceCount } from "@/lib/store/marketplace";
 import {
   ArrowRight,
@@ -17,45 +18,65 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-function formatCount(count: number | null, tag: string, tagPlural?: string) {
-  if (count === null) return null;
+function formatCount(
+  count: number | undefined | null,
+  tag: string,
+  tagPlural?: string
+) {
+  if (count === null || count === undefined) return count;
   if (count >= 1000) return `${(count / 1000).toFixed(1)}k+ items`;
   return `${count} ${count !== 1 ? tagPlural || tag + "s" : tag}`;
 }
 
 export default function DashboardPage() {
-  const { session } = useSession();
-  const [marketplaceCount, setMarketplaceCount] = useState<number | null>(null);
-  const [communitiesCount, setCommunitiesCount] = useState<number | null>(null);
+  const { session, loading } = useSession();
+  const [marketplaceCount, setMarketplaceCount] = useState<
+    number | undefined | null
+  >(undefined);
+  const [communitiesCount, setCommunitiesCount] = useState<
+    number | undefined | null
+  >(undefined);
+  const [userCommunities, setUserCommunities] = useState<
+    Array<Community> | undefined | null
+  >(undefined);
 
-  if (!session?.profile) redirect("/");
-
+  const fetchMarketplaceCount = useCallback(async () => {
+    try {
+      const res = await getMarketplaceCount();
+      setMarketplaceCount(res);
+    } catch (error) {
+      console.error(error);
+      setMarketplaceCount(null);
+    }
+  }, []);
+  const fetchCommunitiesCount = useCallback(async () => {
+    try {
+      const res = await getCommunitiesCount();
+      setCommunitiesCount(res);
+    } catch (error) {
+      console.error(error);
+      setCommunitiesCount(null);
+    }
+  }, []);
+  const fetchUserCommunities = useCallback(async () => {
+    if (!session?.profile.id) return;
+    try {
+      const res = await getUserCommunities(session?.profile.id);
+      setUserCommunities(res);
+    } catch (error) {
+      console.error(error);
+      setUserCommunities(null);
+    }
+  }, [session?.profile.id]);
   useEffect(() => {
-    const fetchMarketplaceCount = async () => {
-      try {
-        const res = await getMarketplaceCount();
-        setMarketplaceCount(res);
-      } catch (error) {
-        console.error(error);
-        setMarketplaceCount(null);
-      }
-    };
-    const fetchCommunitiesCount = async () => {
-      try {
-        const res = await getCommunitiesCount();
-        setCommunitiesCount(res);
-      } catch (error) {
-        console.error(error);
-        setCommunitiesCount(null);
-      }
-    };
     fetchMarketplaceCount();
     fetchCommunitiesCount();
-  }, []);
+    fetchUserCommunities();
+  }, [fetchMarketplaceCount, fetchCommunitiesCount, fetchUserCommunities]);
 
   const featuredModules = [
     {
@@ -138,8 +159,10 @@ export default function DashboardPage() {
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">
-                              {module.stats || (
+                              {module.stats === undefined ? (
                                 <Loader2 className="animate-spin" />
+                              ) : (
+                                module.stats
                               )}
                             </span>
                             <ArrowRight className="h-5 w-5 text-blue-600 group-hover:translate-x-1 transition-transform" />
@@ -183,58 +206,67 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Star className="h-5 w-5 text-purple-600" />
-                  Active Communities
-                </h3>
-                <Link href="/community">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-purple-600 hover:text-purple-700"
-                  >
-                    View All
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* {activeCommunities.map((community) => (
-                  <Link key={community.id} href={`/community/${community.id}`}>
-                    <Card className="group hover:shadow-lg transition-all cursor-pointer border-gray-200 overflow-hidden">
-                      <div className="h-32 overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
-                        <img
-                          src={community.image || "/placeholder.svg"}
-                          alt={community.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+            {loading ||
+              (session?.profile.id && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <Star className="h-5 w-5 text-purple-600" />
+                      Your Communities
+                    </h3>
+                    <Link href="/communities">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-600 hover:text-purple-700"
+                      >
+                        View All
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {!loading && userCommunities ? (
+                      userCommunities.map((community) => (
+                        <Link
+                          key={community.id}
+                          href={`/community/${community.id}`}
+                        >
+                          <Card className="group hover:shadow-lg py-0 gap-0 transition-all cursor-pointer border-gray-200 overflow-hidden">
+                            <div className="h-32 overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
+                              <Image
+                                width={600}
+                                height={400}
+                                src={community.coverImage || "/placeholder.png"}
+                                alt={community.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-semibold text-gray-900 truncate flex-1">
+                                  {community.name}
+                                </h4>
+                              </div>
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {community.members.length.toLocaleString()}{" "}
+                                  members
+                                </span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))
+                    ) : loading || userCommunities === undefined ? (
+                      <div>
+                        <Loader2 className="animate-spin" />
                       </div>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900 truncate flex-1">{community.name}</h4>
-                          {community.isNew && (
-                            <Badge variant="secondary" className="bg-purple-50 text-purple-600 text-xs ml-2">
-                              New
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {community.members.toLocaleString()} members
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            {community.category}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))} */}
-              </div>
-            </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
           </div>
 
           {/* Right Sidebar */}
