@@ -19,7 +19,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Product } from "@/lib/models/Product";
-import { toggleBookmarkListing } from "@/lib/store/marketplace";
+import { getMarketplace, toggleBookmarkListing } from "@/lib/store/marketplace";
 import { categories, Category, Condition } from "@/types/types";
 import { TabsContent } from "@radix-ui/react-tabs";
 import {
@@ -48,7 +48,7 @@ export default function MarketplacePage() {
     useState<Category>("All Categories");
   const [priceRange, setPriceRange] = useState<number[]>([0, 3000]);
   const [condition, setCondition] = useState<Condition>("Any");
-  const [items, setItems] = useState<Product[] | null>(null);
+  const [items, setItems] = useState<Product[] | undefined | null>(undefined);
   const [bookmarkedIds, setBookmarkedIds] = useState(
     session?.profile.bookmarkedProducts || []
   );
@@ -68,29 +68,35 @@ export default function MarketplacePage() {
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (debouncedSearchQuery) params.append("search", debouncedSearchQuery);
-      if (selectedCategory) params.append("category", selectedCategory);
-      if (condition) params.append("condition", condition);
-      if (priceRange[0] !== undefined)
-        params.append("minPrice", priceRange[0].toString());
-      if (priceRange[1] !== undefined)
-        params.append("maxPrice", priceRange[1].toString());
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
+      const res = await getMarketplace(
+        page,
+        limit,
+        debouncedSearchQuery,
+        selectedCategory,
+        condition,
+        priceRange[0],
+        priceRange[1]
+      );
+      if (!res) {
+        setItems(null);
+        throw new Error("Failed to fetch products");
+      }
 
-      const res = await fetch(`/api/marketplace?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch products");
-
-      const data = await res.json();
-      setItems(data.products);
-      setTotalCount(data.totalCount);
+      setItems(res.products);
+      setTotalCount(res.totalCount);
     } catch (err) {
       console.error("Error fetching items", err);
     } finally {
       setLoading(false);
     }
-  }, [condition, priceRange, debouncedSearchQuery, selectedCategory, page]);
+  }, [
+    page,
+    limit,
+    debouncedSearchQuery,
+    selectedCategory,
+    condition,
+    priceRange,
+  ]);
 
   useEffect(() => {
     fetchItems();
@@ -110,7 +116,7 @@ export default function MarketplacePage() {
     await toggleBookmarkListing(itemId);
   };
 
-  if (loading && items === null) {
+  if (items === undefined) {
     return (
       <main className="flex flex-1 items-center justify-center p-6">
         <Loader2 className="animate-spin" />

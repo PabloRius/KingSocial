@@ -2,8 +2,109 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
+import { Category, Condition } from "@/types/types";
 import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary_utils";
 import { Product, productSelect, UpdateProduct } from "../models/Product";
+import { getProfileById } from "./profile";
+
+export async function getMarketplace(
+  page: number,
+  limit: number,
+  search?: string,
+  category?: Category,
+  condition?: Condition,
+  minPrice?: number,
+  maxPrice?: number
+): Promise<{
+  products: Array<Product>;
+  totalCount: number;
+  page: number;
+  limit: number;
+} | null> {
+  try {
+    const session = await auth();
+    const { id } = session?.user ? session.user : { id: undefined };
+    const profile = id ? await getProfileById(id) : undefined;
+    const { sellerProfile } = profile ? profile : { sellerProfile: undefined };
+
+    const skip = (page - 1) * limit;
+
+    const [products, totalCount] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { tags: { has: search } },
+              ],
+            },
+            category && category !== "All Categories" ? { category } : {},
+            condition && condition !== "Any" ? { condition } : {},
+            { price: { gte: minPrice, lte: maxPrice } },
+            { sellerId: { not: sellerProfile?.id } },
+            { status: { not: "sold" } },
+          ],
+        },
+        select: productSelect,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({
+        where: {
+          AND: [
+            {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { tags: { has: search } },
+              ],
+            },
+            category && category !== "All Categories" ? { category } : {},
+            condition && condition !== "Any" ? { condition } : {},
+            { price: { gte: minPrice, lte: maxPrice } },
+          ],
+        },
+      }),
+    ]);
+    return { products, totalCount, page, limit };
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export async function getMarketplaceCount(
+  skipSelf: boolean = true
+): Promise<number | null> {
+  try {
+    let sellerId: string | null = null;
+
+    if (skipSelf) {
+      const session = await auth();
+      const { id } = session?.user ? session.user : { id: undefined };
+      const profile = id ? await getProfileById(id) : undefined;
+      const { sellerProfile } = profile
+        ? profile
+        : { sellerProfile: undefined };
+      sellerId = sellerProfile?.id || null;
+    }
+
+    const count = await prisma.product.count({
+      where: {
+        status: { not: "sold" },
+        ...(sellerId ? { sellerId: { not: sellerId } } : {}),
+      },
+    });
+    console.log(count);
+    return count;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
 
 export async function getListingById(id: string): Promise<Product | null> {
   try {
