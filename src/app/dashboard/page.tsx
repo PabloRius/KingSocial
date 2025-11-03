@@ -7,7 +7,7 @@ import { useSession } from "@/context/session-context";
 import { Community } from "@/lib/models/Community";
 import { Event } from "@/lib/models/Event";
 import { getCommunitiesCount, getUserCommunities } from "@/lib/store/community";
-import { getUserEvents } from "@/lib/store/event";
+import { getRecommendedEvents, getUserEvents } from "@/lib/store/event";
 import { getMarketplaceCount } from "@/lib/store/marketplace";
 import {
   ArrowRight,
@@ -48,6 +48,9 @@ export default function DashboardPage() {
   const [userEvents, setUserEvents] = useState<Array<Event> | undefined | null>(
     undefined
   );
+  const [suggestedCommunities, setSuggestedCommunities] = useState<
+    Array<Event> | undefined | null
+  >(undefined);
 
   const fetchMarketplaceCount = useCallback(async () => {
     try {
@@ -87,16 +90,29 @@ export default function DashboardPage() {
       setUserEvents(null);
     }
   }, [session?.profile.id]);
+  const fetchSuggestedCommunities = useCallback(async () => {
+    if (!session?.profile.id) return;
+    try {
+      const res = await getRecommendedEvents(session.profile.id, 3);
+      setSuggestedCommunities(res);
+    } catch (error) {
+      console.error(error);
+      setSuggestedCommunities(null);
+    }
+  }, [session?.profile.id]);
+
   useEffect(() => {
     fetchMarketplaceCount();
     fetchCommunitiesCount();
     fetchUserCommunities();
     fetchUserEvents();
+    fetchSuggestedCommunities();
   }, [
     fetchMarketplaceCount,
     fetchCommunitiesCount,
     fetchUserCommunities,
     fetchUserEvents,
+    fetchSuggestedCommunities,
   ]);
 
   const featuredModules = [
@@ -361,61 +377,70 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Suggested Communities */}
+              {/* Recommended Events */}
               <Card className="border-gray-200 shadow-sm">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <Globe className="h-5 w-5 text-green-600" />
-                    Suggested Communities
+                    Recommended Events
                   </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400" />
-                        <div>
-                          <p className="font-medium text-sm text-gray-900">
-                            Tech Innovators
-                          </p>
-                          <p className="text-xs text-gray-500">1.2k members</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Join
-                      </Button>
+
+                  {loading || suggestedCommunities === undefined ? (
+                    // Loader
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="animate-spin text-green-600 h-6 w-6" />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400" />
-                        <div>
-                          <p className="font-medium text-sm text-gray-900">
-                            Book Club
-                          </p>
-                          <p className="text-xs text-gray-500">623 members</p>
+                  ) : suggestedCommunities ===
+                    null ? null : suggestedCommunities.length === 0 ? (
+                    // Empty state
+                    <p className="text-gray-500 text-sm italic">
+                      No event recommendations available right now.
+                    </p>
+                  ) : (
+                    // Events list
+                    <div className="space-y-3">
+                      {suggestedCommunities.map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-lg transition"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                              <Calendar className="h-5 w-5 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm text-gray-900 line-clamp-1">
+                                {event.title}
+                              </p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {event.location || "Online"}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {new Date(event.date).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <Link href={`/dashboard/events/${event.id}`}>
+                            <Button size="sm" variant="outline">
+                              View
+                            </Button>
+                          </Link>
                         </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Join
-                      </Button>
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-400" />
-                        <div>
-                          <p className="font-medium text-sm text-gray-900">
-                            Fitness Group
-                          </p>
-                          <p className="text-xs text-gray-500">892 members</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Join
-                      </Button>
-                    </div>
-                  </div>
-                  <Link href="/community">
+                  )}
+
+                  <Link href="/dashboard/events">
                     <Button
                       variant="outline"
-                      className="w-full mt-4 border-purple-200 text-purple-600 hover:bg-purple-50 bg-transparent"
+                      className="w-full mt-4 border-green-200 text-green-600 hover:bg-green-50 bg-transparent"
                     >
                       Explore More
                       <ArrowRight className="ml-2 h-4 w-4" />
