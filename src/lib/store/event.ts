@@ -54,7 +54,7 @@ export async function createEvent(
 export async function getEvents(): Promise<Event[] | null> {
   try {
     const events = prisma.event.findMany({
-      where: { public: true },
+      where: { public: true, date: { gte: new Date() } },
       select: eventSelect,
     });
     return events || null;
@@ -213,10 +213,9 @@ export async function getRecommendedEvents(
   });
   if (!user?.embedding) return [];
 
-  const events = await prisma.event.findMany({
-    where: { date: { gte: new Date() } },
-    select: eventSelect,
-  });
+  const events = await getEvents();
+
+  if (!events) return [];
 
   const scored = events
     .filter((e) => e.embedding)
@@ -232,4 +231,27 @@ export async function getRecommendedEvents(
     .slice(0, limit);
 
   return scored;
+}
+
+export async function getUserEvents(
+  userId: string
+): Promise<Array<Event> | null> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+
+    if (!sessionUserId || sessionUserId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const events = prisma.event.findMany({
+      where: { participants: { some: { userId } }, date: { gte: new Date() } },
+      select: eventSelect,
+    });
+
+    return events || null;
+  } catch (err) {
+    console.error("❌ Error retrieving user events:", err);
+    return null;
+  }
 }

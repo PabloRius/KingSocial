@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSession } from "@/context/session-context";
 import { Community } from "@/lib/models/Community";
+import { Event } from "@/lib/models/Event";
 import { getCommunitiesCount, getUserCommunities } from "@/lib/store/community";
+import { getUserEvents } from "@/lib/store/event";
 import { getMarketplaceCount } from "@/lib/store/marketplace";
 import {
   ArrowRight,
@@ -43,6 +45,9 @@ export default function DashboardPage() {
   const [userCommunities, setUserCommunities] = useState<
     Array<Community> | undefined | null
   >(undefined);
+  const [userEvents, setUserEvents] = useState<Array<Event> | undefined | null>(
+    undefined
+  );
 
   const fetchMarketplaceCount = useCallback(async () => {
     try {
@@ -65,18 +70,34 @@ export default function DashboardPage() {
   const fetchUserCommunities = useCallback(async () => {
     if (!session?.profile.id) return;
     try {
-      const res = await getUserCommunities(session?.profile.id);
+      const res = await getUserCommunities(session.profile.id);
       setUserCommunities(res);
     } catch (error) {
       console.error(error);
       setUserCommunities(null);
     }
   }, [session?.profile.id]);
+  const fetchUserEvents = useCallback(async () => {
+    if (!session?.profile.id) return;
+    try {
+      const res = await getUserEvents(session.profile.id);
+      setUserEvents(res);
+    } catch (error) {
+      console.error(error);
+      setUserEvents(null);
+    }
+  }, [session?.profile.id]);
   useEffect(() => {
     fetchMarketplaceCount();
     fetchCommunitiesCount();
     fetchUserCommunities();
-  }, [fetchMarketplaceCount, fetchCommunitiesCount, fetchUserCommunities]);
+    fetchUserEvents();
+  }, [
+    fetchMarketplaceCount,
+    fetchCommunitiesCount,
+    fetchUserCommunities,
+    fetchUserEvents,
+  ]);
 
   const featuredModules = [
     {
@@ -206,67 +227,72 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {loading ||
-              (session?.profile.id && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <Star className="h-5 w-5 text-purple-600" />
-                      Your Communities
-                    </h3>
-                    <Link href="/communities">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-purple-600 hover:text-purple-700"
-                      >
-                        View All
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {!loading && userCommunities ? (
-                      userCommunities.map((community) => (
-                        <Link
-                          key={community.id}
-                          href={`/community/${community.id}`}
-                        >
-                          <Card className="group hover:shadow-lg py-0 gap-0 transition-all cursor-pointer border-gray-200 overflow-hidden">
-                            <div className="h-32 overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
-                              <Image
-                                width={600}
-                                height={400}
-                                src={community.coverImage || "/placeholder.png"}
-                                alt={community.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-2">
-                                <h4 className="font-semibold text-gray-900 truncate flex-1">
-                                  {community.name}
-                                </h4>
-                              </div>
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  {community.members.length.toLocaleString()}{" "}
-                                  members
-                                </span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))
-                    ) : loading || userCommunities === undefined ? (
-                      <div>
-                        <Loader2 className="animate-spin" />
-                      </div>
-                    ) : null}
-                  </div>
+            {session?.profile?.id && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-purple-600" />
+                    Your Communities
+                  </h3>
+                  <Link href="/communities">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-purple-600 hover:text-purple-700"
+                    >
+                      View All
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
-              ))}
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {loading || userCommunities === undefined ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="animate-spin text-purple-600 h-6 w-6" />
+                    </div>
+                  ) : userCommunities ===
+                    null ? null : userCommunities.length === 0 ? (
+                    <p className="text-gray-500 text-sm italic">
+                      You haven’t joined any communities yet.
+                    </p>
+                  ) : (
+                    userCommunities.map((community) => (
+                      <Link
+                        key={community.id}
+                        href={`/community/${community.id}`}
+                      >
+                        <Card className="group hover:shadow-lg py-0 gap-0 transition-all cursor-pointer border-gray-200 overflow-hidden">
+                          <div className="h-32 overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
+                            <Image
+                              width={600}
+                              height={400}
+                              src={community.coverImage || "/placeholder.png"}
+                              alt={community.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <h4 className="font-semibold text-gray-900 truncate flex-1">
+                                {community.name}
+                              </h4>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                {community.members.length.toLocaleString()}{" "}
+                                members
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar */}
@@ -279,39 +305,51 @@ export default function DashboardPage() {
                     <Calendar className="h-5 w-5 text-purple-600" />
                     Upcoming Events
                   </h3>
-                  <div className="space-y-4">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                        <Calendar className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          Tech Meetup
-                        </h4>
-                        <p className="text-sm text-gray-500">Mar 15</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          Virtual
-                        </p>
-                      </div>
+
+                  {loading || userEvents === undefined ? (
+                    // Loader state
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="animate-spin text-purple-600 h-6 w-6" />
                     </div>
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                        <Calendar className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          Art Exhibition
-                        </h4>
-                        <p className="text-sm text-gray-500">Mar 20</p>
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          Downtown Gallery
-                        </p>
-                      </div>
+                  ) : userEvents === null ? null : userEvents.length === 0 ? (
+                    // Empty state
+                    <p className="text-gray-500 text-sm italic">
+                      You have no upcoming events.
+                    </p>
+                  ) : (
+                    // Events list
+                    <div className="space-y-4">
+                      {userEvents.slice(0, 3).map((event) => (
+                        <div key={event.id} className="flex gap-3">
+                          <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                            <Calendar className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">
+                              {event.title}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              {new Date(event.date).toLocaleDateString(
+                                undefined,
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
+                            </p>
+                            {event.location && (
+                              <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {event.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                  <Link href="/community">
+                  )}
+
+                  <Link href="/dashboard/events">
                     <Button
                       variant="outline"
                       className="w-full mt-4 border-blue-200 text-blue-600 hover:bg-blue-50 bg-transparent"
