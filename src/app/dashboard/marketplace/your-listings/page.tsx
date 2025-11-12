@@ -20,14 +20,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/context/session-context";
 import { Product } from "@/lib/models/Product";
@@ -36,13 +28,10 @@ import {
   removeListingById,
   sellListing,
 } from "@/lib/store/marketplace";
-import { categories } from "@/types/types";
 import {
-  ArrowUpRight,
   Bookmark,
   Calendar,
   CheckCircle,
-  Crown,
   Edit,
   Eye,
   Loader2,
@@ -52,9 +41,7 @@ import {
   Plus,
   PoundSterling,
   RotateCcw,
-  Search,
   Trash2,
-  TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -73,9 +60,7 @@ export default function YourListingsPage() {
   const { session, loading } = useSession();
 
   const [listings, setListings] = useState<Product[] | undefined>(undefined);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
-  const [sortBy, setSortBy] = useState("newest");
+
   const [deletingListing, setDeletingListing] = useState<Product | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -171,7 +156,7 @@ export default function YourListingsPage() {
 
   const ListingCard = ({ listing }: { listing: Product }) => (
     <Link href={`/dashboard/marketplace/${listing.id}`}>
-      <Card className="group hover:shadow-xl transition-all duration-300 overflow-hidden border-blue-200 pb-0 h-full">
+      <Card className="group hover:shadow-xl p-0 gap-0 transition-all duration-300 overflow-hidden border-blue-200 pb-0 h-full">
         <div className="relative flex flex-col h-full">
           <div className="aspect-square overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
             <Image
@@ -181,31 +166,6 @@ export default function YourListingsPage() {
               height={300}
               className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
             />
-          </div>
-          <div className="absolute top-3 left-3">
-            <Badge
-              variant={listing.status === "active" ? "default" : "secondary"}
-              className={`${
-                listing.status === "active"
-                  ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-              } text-white shadow-lg`}
-            >
-              {listing.status === "active" ? (
-                <>
-                  <span className="relative flex h-2 w-2 mr-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                  </span>
-                  Active
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Sold
-                </>
-              )}
-            </Badge>
           </div>
           <div
             onClick={(e) => e.stopPropagation()}
@@ -283,7 +243,7 @@ export default function YourListingsPage() {
             </DropdownMenu>
           </div>
 
-          <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-lg">
+          <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-lg p-2.5 shadow-lg w-min">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 text-gray-700">
@@ -351,27 +311,20 @@ export default function YourListingsPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <h1 className="text-3xl font-bold">Your Listings</h1>
-              <Badge
-                className={`${
-                  session.profile.sellerProfile?.plan === "pro"
-                    ? "bg-gradient-to-r from-yellow-400 to-orange-500 text-black"
-                    : "bg-white/20 text-white"
-                } border-white/30 flex items-center gap-1.5 px-3 py-1.5`}
-              >
-                {session.profile.sellerProfile?.plan === "pro" && (
-                  <Crown className="h-4 w-4" />
-                )}
-                {session.profile.sellerProfile?.plan === "pro"
-                  ? "Pro Seller"
-                  : "Seller"}
-              </Badge>
             </div>
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold">
-                  {totalStats.active + totalStats.sold}
+                <div className="text-3xl font-bold">{totalStats.active}</div>
+                <div className="text-sm text-white/90">
+                  Active Listing{totalStats.active > 1 && "s"}
                 </div>
-                <div className="text-sm text-white/90">Total Listings</div>
+              </div>
+              <div className="h-12 w-px bg-white/30"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold">{totalStats.sold}</div>
+                <div className="text-sm text-white/90">
+                  Sold Listing{totalStats.active > 1 && "s"}
+                </div>
               </div>
               <div className="h-12 w-px bg-white/30"></div>
               <div className="text-center">
@@ -394,121 +347,7 @@ export default function YourListingsPage() {
             </div>
           </div>
         </div>
-
-        {/* Performance Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="border-blue-200 shadow-md hover:shadow-xl transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-white" />
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900">
-                {totalStats.active}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">
-                Active Listings
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-200 shadow-md hover:shadow-xl transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg">
-                  <PoundSterling className="h-5 w-5 text-white" />
-                </div>
-                <ArrowUpRight className="h-4 w-4 text-blue-500" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900">
-                {totalStats.sold}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">
-                Items Sold
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-200 shadow-md hover:shadow-xl transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg">
-                  <Eye className="h-5 w-5 text-white" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-purple-500" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900">
-                {totalStats.totalViews}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">
-                Total Views
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-200 shadow-md hover:shadow-xl transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg">
-                  <MessageCircle className="h-5 w-5 text-white" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-pink-500" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900">
-                {totalStats.totalMessages}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">
-                Total Messages
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-
-      {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search all your listings..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="views">Most Views</SelectItem>
-                <SelectItem value="likes">Most Likes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Listings Tabs */}
       <Tabs defaultValue="active" className="space-y-6">
@@ -545,22 +384,20 @@ export default function YourListingsPage() {
               </div>
               <h3 className="text-xl font-bold mb-2">No Active Listings</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {searchQuery || categoryFilter !== "All"
-                  ? "No active listings match your search criteria."
-                  : "You don't have any active listings yet. Create your first listing to start selling!"}
+                {
+                  "You don't have any active listings yet. Create your first listing to start selling!"
+                }
               </p>
-              {!searchQuery && categoryFilter === "All" && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                >
-                  <Link href="sell">
-                    <Plus className="mr-2 h-5 w-5" />
-                    Create Your First Listing
-                  </Link>
-                </Button>
-              )}
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <Link href="sell">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create Your First Listing
+                </Link>
+              </Button>
             </Card>
           )}
         </TabsContent>
@@ -581,9 +418,9 @@ export default function YourListingsPage() {
               </div>
               <h3 className="text-xl font-bold mb-2">No Sold Items Yet</h3>
               <p className="text-gray-600 max-w-md mx-auto">
-                {searchQuery || categoryFilter !== "All"
-                  ? "No sold listings match your search criteria."
-                  : "You haven't sold any items yet. Keep promoting your active listings!"}
+                {
+                  "You haven't sold any items yet. Keep promoting your active listings!"
+                }
               </p>
             </Card>
           )}
