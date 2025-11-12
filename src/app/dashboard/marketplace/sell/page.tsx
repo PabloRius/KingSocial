@@ -185,7 +185,7 @@ export default function SellPage() {
         return;
       }
 
-      window.location.href = "/dashboard/marketplace";
+      window.location.href = "/dashboard/marketplace/your-listings";
     } catch {
       alert("Something went wrong.");
     } finally {
