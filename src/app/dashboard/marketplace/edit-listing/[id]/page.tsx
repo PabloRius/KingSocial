@@ -80,8 +80,11 @@ export default function EditPage({
     fetchListing();
   }, [params, router]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: field === "price" ? Number(value) : value,
+    }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,26 +284,10 @@ export default function EditPage({
                         value={formData.price}
                         onChange={(e) => {
                           const value = e.target.value;
-
-                          if (value === "") {
-                            handleInputChange("price", "");
-                            return;
-                          }
-
-                          const parsed = parseFloat(value);
-                          if (isNaN(parsed) || parsed < 0) return;
-
-                          handleInputChange("price", value);
-                        }}
-                        onBlur={(e) => {
-                          const value = e.target.value.trim();
-                          if (
-                            value === "" ||
-                            isNaN(Number(value)) ||
-                            Number(value) < 0
-                          ) {
-                            handleInputChange("price", "0");
-                          }
+                          handleInputChange(
+                            "price",
+                            value === "" ? 0 : Number(value)
+                          );
                         }}
                         className="pl-10"
                       />
