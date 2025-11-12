@@ -35,6 +35,7 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
   coverImage: true,
   mode: true,
   members: { select: communityMemberSelect },
+  _count: { select: { members: true } },
   chat: {
     select: communityMessageSelect,
   },
