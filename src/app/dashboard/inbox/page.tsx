@@ -348,7 +348,7 @@ export default function InboxPage() {
 
             {/* Messages */}
             <ScrollArea className="flex-1 px-4 overflow-hidden">
-              <div className="space-y-4 py-4 max-w-3xl mx-auto">
+              <div className="space-y-4 py-4 px-4 mx-auto">
                 {selectedChatData.messages.map((msg, i) => {
                   const msgDate = new Date(msg.createdAt);
 
