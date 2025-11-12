@@ -25,7 +25,7 @@ export default function CommunityCard({
   isMember,
 }: CommunityCardProps) {
   return (
-    <Link href={`/communities/${community.id}`}>
+    <Link href={`/dashboard/communities/${community.id}`}>
       <Card className="group h-full p-0 gap-0 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-celestial-blue/20 overflow-hidden rounded-xl">
         {/* Cover Image */}
         <div className="relative h-44 sm:h-52 overflow-hidden">
