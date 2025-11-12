@@ -329,7 +329,7 @@ export default function YourListingsPage() {
               <div className="h-12 w-px bg-white/30"></div>
               <div className="text-center">
                 <div className="text-3xl font-bold">
-                  ${totalStats.totalEarnings}
+                  ${totalStats.totalEarnings.toFixed(2)}
                 </div>
                 <div className="text-sm text-white/90">Total Earned</div>
               </div>
