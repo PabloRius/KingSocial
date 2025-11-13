@@ -7,8 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { User } from "@/lib/models/User";
 import { toggleBookmarkListing } from "@/lib/store/marketplace";
-import { getProfileByUsername } from "@/lib/store/profile";
-import { Loader2, Package, Star } from "lucide-react";
+import { getProfileById } from "@/lib/store/profile";
+import { Loader2, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -18,11 +18,11 @@ export default function ProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [username, setUsername] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     const initPage = async () => {
       const { id } = await params;
-      setUsername(id);
+      setUserId(id);
     };
     initPage();
   }, [params]);
@@ -31,16 +31,16 @@ export default function ProfilePage({
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!username) return;
+    if (!userId) return;
     try {
-      const fetchedProfile = await getProfileByUsername(username);
+      const fetchedProfile = await getProfileById(userId);
       setProfile(fetchedProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [username]);
+  }, [userId]);
 
   useEffect(() => {
     fetchProfile();
@@ -122,16 +122,8 @@ export default function ProfilePage({
                 {/* Profile Info */}
                 <div className="flex-1 min-w-0 text-white drop-shadow-lg text-left">
                   <h1 className="text-3xl font-bold">{profile.name}</h1>
-                  <p className="text-gray-200 mb-2">@{profile.username}</p>
+                  <p className="text-gray-200 mb-2">@{profile.name}</p>
                   <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-200">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">
-                        {profile.sellerProfile?.rating}
-                      </span>
-                      <span>({100} reviews)</span>
-                    </div>
-                    <span>•</span>
                     <span>
                       Joined{" "}
                       {new Date(profile.createdAt).toLocaleString("en-US", {
