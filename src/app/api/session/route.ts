@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { GetProfile } from "@/lib/actions/profile";
+import { getProfileById } from "@/lib/store/profile";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    const profile = await GetProfile(session.user.id);
+    const profile = await getProfileById(session.user.id);
 
     if (!profile) {
       return NextResponse.json(

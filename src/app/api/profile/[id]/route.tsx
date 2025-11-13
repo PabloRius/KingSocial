@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { GetProfileByUsername } from "@/lib/actions/profile";
+import { getProfileById } from "@/lib/store/profile";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -19,7 +19,7 @@ export async function GET(
   }
 
   try {
-    const profile = await GetProfileByUsername(id);
+    const profile = await getProfileById(id);
 
     if (!profile) {
       return new NextResponse("Profile not found", { status: 404 });

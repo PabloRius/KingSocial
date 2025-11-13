@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
-import { GetProfile } from "@/lib/actions/profile";
 import { uploadToCloudinary } from "@/lib/cloudinary_utils";
+import { categories } from "@/lib/models/Category";
+import { conditions } from "@/lib/models/Condition";
+import { getProfileById } from "@/lib/store/profile";
 import prisma from "@/prisma";
-import { categories, conditions } from "@/types/types";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
     const { id } = session.user;
 
-    const profile = await GetProfile(id);
+    const profile = await getProfileById(id);
 
     if (!profile) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { GetProfile } from "@/lib/actions/profile";
+import { getProfileById } from "@/lib/store/profile";
 import prisma from "@/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    const profile = await GetProfile(session.user.id);
+    const profile = await getProfileById(session.user.id);
 
     if (!profile) {
       return NextResponse.json(
