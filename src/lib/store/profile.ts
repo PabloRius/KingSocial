@@ -18,21 +18,6 @@ export async function getProfileById(id: string): Promise<User | null> {
   }
 }
 
-export async function getProfileByUsername(
-  username: string
-): Promise<User | null> {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: userSelect,
-    });
-    return user;
-  } catch (error) {
-    console.error("Error fetching user for username: ", username, error);
-    return null;
-  }
-}
-
 export async function deleteProfileById(id: string) {
   try {
     const userToDelete = await prisma.user.findUnique({
