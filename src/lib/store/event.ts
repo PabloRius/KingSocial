@@ -3,8 +3,14 @@
 import { auth } from "@/auth";
 import prisma from "@/prisma";
 import { Event, EventCreatePayload, eventSelect } from "../models/Event";
-import { cosineSimilarity } from "../openai";
+import {
+  addEmbeddingToUser,
+  cosineSimilarity,
+  generateEventEmbedding,
+  removeEmbeddingFromUser,
+} from "../openai";
 import { sendMessageWithFallback } from "./chat";
+import { getUserCommunities } from "./community";
 
 export async function createEvent(
   event: EventCreatePayload,
@@ -33,6 +39,7 @@ export async function createEvent(
       throw new Error("Insufficient permissions to create an event");
     }
 
+    // Create the event without embedding first
     const newEvent = await prisma.event.create({
       data: {
         ...event,
@@ -44,22 +51,63 @@ export async function createEvent(
       },
       select: eventSelect,
     });
-    return newEvent || null;
+
+    if (!newEvent) return null;
+
+    // Generate embedding for the new event
+    const embedding = await generateEventEmbedding(newEvent.id);
+
+    // Update the event with the embedding
+    await prisma.event.update({
+      where: { id: newEvent.id },
+      data: { embedding },
+    });
+
+    // Optionally, add the embedding to the creator's user embedding
+    if (embedding) {
+      await addEmbeddingToUser(creatorId, embedding);
+    }
+
+    return { ...newEvent, embedding };
   } catch (err) {
     console.error(err);
     return null;
   }
 }
 
-export async function getEvents(): Promise<Event[] | null> {
+export async function getEvents(
+  onlyPublic: boolean = true
+): Promise<Event[] | null> {
   try {
-    const events = prisma.event.findMany({
-      where: { public: true, date: { gte: new Date() } },
-      select: eventSelect,
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new Error("Unauthorized");
+
+    const userCommunities = await getUserCommunities(userId);
+    const communityIds = (userCommunities || []).map((c) => c.id);
+
+    const joinedEvents = await prisma.eventParticipant.findMany({
+      where: { userId },
+      select: { eventId: true },
     });
-    return events || null;
+    const joinedEventIds = joinedEvents.map((e) => e.eventId);
+
+    const events = await prisma.event.findMany({
+      where: {
+        date: { gte: new Date() },
+        id: { notIn: joinedEventIds },
+        OR: [
+          ...(onlyPublic ? [{ public: true }] : []),
+          { communityId: { in: communityIds } },
+        ],
+      },
+      select: eventSelect,
+      orderBy: { date: "asc" },
+    });
+
+    return events;
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching events:", err);
     return null;
   }
 }
@@ -94,13 +142,9 @@ export async function joinEvent(
       select: {
         id: true,
         public: true,
+        embedding: true, // include the embedding
         communityId: true,
-        participants: {
-          select: {
-            id: true,
-            userId: true,
-          },
-        },
+        participants: { select: { userId: true } },
       },
     });
 
@@ -109,10 +153,7 @@ export async function joinEvent(
     const alreadyParticipant = eventData.participants.some(
       (p) => p.userId === sessionUserId
     );
-    if (alreadyParticipant) {
-      console.warn("User already joined this event");
-      return true;
-    }
+    if (alreadyParticipant) return true;
 
     if (!eventData.public) {
       const communityMember = await prisma.communityMember.findFirst({
@@ -122,13 +163,13 @@ export async function joinEvent(
         },
         select: { id: true },
       });
-
       if (!communityMember) {
         throw new Error(
           "You must be a member of the community to join this event"
         );
       }
     }
+
     await prisma.eventParticipant.create({
       data: {
         event: { connect: { id: eventId } },
@@ -136,9 +177,53 @@ export async function joinEvent(
       },
     });
 
+    // Update user embedding
+    if (eventData.embedding) {
+      await addEmbeddingToUser(userId, eventData.embedding as number[]);
+    }
+
     return true;
   } catch (err) {
     console.error("❌ Error joining event:", err);
+    return false;
+  }
+}
+
+export async function leaveEvent(
+  eventId: string,
+  userId: string
+): Promise<boolean> {
+  try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
+
+    if (!sessionUserId || sessionUserId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const participant = await prisma.eventParticipant.findFirst({
+      where: { eventId, userId },
+      select: { id: true, event: { select: { embedding: true } } },
+    });
+
+    if (!participant) {
+      console.warn("User is not part of this event");
+      return true; // nothing to do
+    }
+
+    await prisma.eventParticipant.delete({ where: { id: participant.id } });
+
+    // Remove event embedding from user
+    if (participant.event.embedding) {
+      await removeEmbeddingFromUser(
+        userId,
+        participant.event.embedding as number[]
+      );
+    }
+
+    return true;
+  } catch (err) {
+    console.error("❌ Error leaving event:", err);
     return false;
   }
 }
@@ -212,6 +297,7 @@ export async function getRecommendedEvents(
     select: { embedding: true },
   });
   if (!user?.embedding) return [];
+  console.log("AAAAAAAAAAAAA");
 
   const events = await getEvents();
 

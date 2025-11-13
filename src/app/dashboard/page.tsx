@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const [userEvents, setUserEvents] = useState<Array<Event> | undefined | null>(
     undefined
   );
-  const [suggestedCommunities, setSuggestedCommunities] = useState<
+  const [suggestedEvents, setSuggestedEvents] = useState<
     Array<Event> | undefined | null
   >(undefined);
 
@@ -90,14 +90,14 @@ export default function DashboardPage() {
       setUserEvents(null);
     }
   }, [session?.profile.id]);
-  const fetchSuggestedCommunities = useCallback(async () => {
+  const fetchSuggestedEvents = useCallback(async () => {
     if (!session?.profile.id) return;
     try {
       const res = await getRecommendedEvents(session.profile.id, 3);
-      setSuggestedCommunities(res);
+      setSuggestedEvents(res);
     } catch (error) {
       console.error(error);
-      setSuggestedCommunities(null);
+      setSuggestedEvents(null);
     }
   }, [session?.profile.id]);
 
@@ -106,13 +106,13 @@ export default function DashboardPage() {
     fetchCommunitiesCount();
     fetchUserCommunities();
     fetchUserEvents();
-    fetchSuggestedCommunities();
+    fetchSuggestedEvents();
   }, [
     fetchMarketplaceCount,
     fetchCommunitiesCount,
     fetchUserCommunities,
     fetchUserEvents,
-    fetchSuggestedCommunities,
+    fetchSuggestedEvents,
   ]);
 
   const featuredModules = [
@@ -385,13 +385,13 @@ export default function DashboardPage() {
                     Recommended Events
                   </h3>
 
-                  {loading || suggestedCommunities === undefined ? (
+                  {loading || suggestedEvents === undefined ? (
                     // Loader
                     <div className="flex justify-center py-6">
                       <Loader2 className="animate-spin text-green-600 h-6 w-6" />
                     </div>
-                  ) : suggestedCommunities ===
-                    null ? null : suggestedCommunities.length === 0 ? (
+                  ) : suggestedEvents ===
+                    null ? null : suggestedEvents.length === 0 ? (
                     // Empty state
                     <p className="text-gray-500 text-sm italic">
                       No event recommendations available right now.
@@ -399,7 +399,7 @@ export default function DashboardPage() {
                   ) : (
                     // Events list
                     <div className="space-y-3">
-                      {suggestedCommunities.map((event) => (
+                      {suggestedEvents.map((event) => (
                         <div
                           key={event.id}
                           className="flex items-center justify-between hover:bg-gray-50 p-2 rounded-lg transition"

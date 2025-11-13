@@ -24,6 +24,7 @@ export const communityMemberSelect =
     id: true,
     role: true,
     user: { select: { id: true, image: true, name: true, username: true } },
+    community: { select: { id: true } },
     joinedAt: true,
     userId: true,
   });

@@ -28,7 +28,6 @@ model User {
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
 
-  username                String            @unique
   sellerProfile           SellerProfile?
   biography               String?
   instagram               String?
@@ -48,6 +47,7 @@ model User {
   // AI fields
   interests               String []
   embedding               Json?
+  embeddingCount          Int               @default(0)
 }
  
 model Account {

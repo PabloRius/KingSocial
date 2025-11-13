@@ -627,7 +627,7 @@ export default function CreateEventPage({
                     id="capacity"
                     type="number"
                     min="1"
-                    value={formData.capacity}
+                    value={formData.capacity || 10}
                     onChange={(e) =>
                       setFormData({
                         ...formData,

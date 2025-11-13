@@ -1,12 +1,15 @@
 import prisma from "@/prisma";
+import { Prisma } from "@prisma/client";
 import { OpenAI } from "openai";
 import { getEventById } from "./store/event";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function generateEventEmbedding(eventId: string) {
+export async function generateEventEmbedding(
+  eventId: string
+): Promise<number[] | null> {
   const event = await getEventById(eventId);
-  if (!event) return;
+  if (!event) return null;
 
   const text = `${event.title}. ${event.description}. Tags: ${event.tags.join(
     ", "
@@ -21,13 +24,17 @@ export async function generateEventEmbedding(eventId: string) {
     where: { id: eventId },
     data: { embedding: embedding.data[0].embedding },
   });
+
+  return embedding.data[0].embedding;
 }
 
-export async function generateCommunityEmbedding(communityId: string) {
+export async function generateCommunityEmbedding(
+  communityId: string
+): Promise<number[] | null> {
   const community = await prisma.community.findUnique({
     where: { id: communityId },
   });
-  if (!community) return;
+  if (!community) return null;
 
   const text = `${community.name}. ${community.description}`;
 
@@ -40,6 +47,8 @@ export async function generateCommunityEmbedding(communityId: string) {
     where: { id: communityId },
     data: { embedding: embedding.data[0].embedding },
   });
+
+  return embedding.data[0].embedding;
 }
 
 export async function updateUserEmbedding(userId: string) {
@@ -69,6 +78,60 @@ export async function updateUserEmbedding(userId: string) {
   await prisma.user.update({
     where: { id: userId },
     data: { embedding: avgVector },
+  });
+}
+
+export async function addEmbeddingToUser(userId: string, vector: number[]) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return;
+
+  const n = user.embeddingCount || 0;
+  const oldEmbedding: number[] = Array.isArray(user.embedding)
+    ? (user.embedding as number[])
+    : new Array(vector.length).fill(0);
+
+  const newEmbedding = oldEmbedding.map(
+    (val, i) => (val * n + vector[i]) / (n + 1)
+  );
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { embedding: newEmbedding, embeddingCount: n + 1 },
+  });
+}
+
+export async function removeEmbeddingFromUser(
+  userId: string,
+  vector: number[]
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { embedding: true, embeddingCount: true },
+  });
+  if (!user) return;
+
+  const n = user.embeddingCount || 0;
+  if (n <= 1) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { embedding: [], embeddingCount: 0 },
+    });
+  }
+
+  const oldEmbedding: number[] = Array.isArray(user.embedding)
+    ? (user.embedding as number[])
+    : [];
+
+  const newEmbedding = oldEmbedding.map(
+    (val, i) => (val * n - vector[i]) / (n - 1)
+  );
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      embedding: newEmbedding as unknown as Prisma.JsonArray,
+      embeddingCount: n - 1,
+    },
   });
 }
 

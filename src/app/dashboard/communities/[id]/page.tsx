@@ -45,8 +45,6 @@ import {
   Bell,
   BellOff,
   Calendar,
-  Crown,
-  ImageIcon,
   Loader2,
   Lock,
   MapPin,
@@ -54,7 +52,6 @@ import {
   MoreVertical,
   Send,
   Settings,
-  Shield,
   Trash2,
   Upload,
   UserPlus,
@@ -223,14 +220,12 @@ export default function CommunityDetailPage({
       case "admin":
         return (
           <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-            <Crown className="w-3 h-3 mr-1" />
             Admin
           </Badge>
         );
       case "moderator":
         return (
           <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
-            <Shield className="w-3 h-3 mr-1" />
             Moderator
           </Badge>
         );
@@ -389,6 +384,8 @@ export default function CommunityDetailPage({
       return toast.error("Error joining the community, try again later");
     }
   };
+
+  const events = community.events.filter((event) => event.date >= new Date());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -695,13 +692,6 @@ export default function CommunityDetailPage({
                       className="flex-1"
                     />
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      <ImageIcon className="w-5 h-5" />
-                    </Button>
-                    <Button
                       onClick={handleSendMessage}
                       className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90"
                     >
@@ -729,120 +719,145 @@ export default function CommunityDetailPage({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {community.events.map((event) => {
-                      const isAttending = joinedEventsMock.some(
-                        (ev) => ev.eventId === event.id
-                      );
+                  {events.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {events.map((event) => {
+                        const isAttending = joinedEventsMock.some(
+                          (ev) => ev.eventId === event.id
+                        );
 
-                      return (
-                        <Card
-                          key={event.id}
-                          className="overflow-hidden group hover:shadow-lg transition-all"
-                        >
-                          {/* --- Event Cover --- */}
-                          <div className="relative h-48 w-full">
-                            <Image
-                              src={event.coverImage || "/placeholder.png"}
-                              alt={event.title}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            <Badge
-                              className={`absolute top-3 right-3 ${
-                                event.location_format === "online"
-                                  ? "bg-green-500 text-white"
-                                  : "bg-blue-500 text-white"
-                              }`}
-                            >
-                              {event.location_format === "online"
-                                ? "🌐 Online"
-                                : "📍 In Person"}
-                            </Badge>
-                          </div>
-
-                          {/* --- Card Body --- */}
-                          <div className="p-4">
-                            <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
-                              {event.title}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                              {event.description}
-                            </p>
-
-                            {/* --- Date & Location --- */}
-                            <div className="space-y-2 mb-4">
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Calendar className="w-4 h-4" />
-                                <span>
-                                  {formatDate(new Date(event.date))}
-                                  {event.start_time
-                                    ? ` at ${event.start_time}`
-                                    : " all day"}
-                                </span>
-                              </div>
-                              {event.location_format === "in-person" && (
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <MapPin className="w-4 h-4" />
-                                  <span>{event.location}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* --- Capacity Bar --- */}
-                            {event.capacity && (
-                              <div className="mb-4">
-                                <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                                  <span>
-                                    {event._count.participants} attending
-                                  </span>
-                                  <span>
-                                    {event.capacity - event._count.participants}{" "}
-                                    spots left
-                                  </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
-                                    style={{
-                                      width: `${
-                                        (event._count.participants /
-                                          event.capacity) *
-                                        100
-                                      }%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-
-                            {/* --- Buttons --- */}
-                            <div className="flex gap-2">
-                              <Link href={`/dashboard/events/${event.id}`}>
-                                <Button className="flex-1 bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
-                                  View Details
-                                </Button>
-                              </Link>
-
-                              <Button
-                                variant={isAttending ? "outline" : "default"}
-                                disabled={isAttending}
-                                onClick={() => handleJoinEvent(event.id)}
-                                className={`flex-1 ${
-                                  isAttending
-                                    ? "border-green-500 text-green-600 hover:bg-green-50"
-                                    : "bg-green-500 hover:bg-green-600 text-white"
+                        return (
+                          <Card
+                            key={event.id}
+                            className="overflow-hidden group hover:shadow-lg transition-all"
+                          >
+                            {/* --- Event Cover --- */}
+                            <div className="relative h-48 w-full">
+                              <Image
+                                src={event.coverImage || "/placeholder.png"}
+                                alt={event.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              <Badge
+                                className={`absolute top-3 right-3 ${
+                                  event.location_format === "online"
+                                    ? "bg-green-500 text-white"
+                                    : "bg-blue-500 text-white"
                                 }`}
                               >
-                                {isAttending ? "Joined" : "Join Event"}
-                              </Button>
+                                {event.location_format === "online"
+                                  ? "🌐 Online"
+                                  : "📍 In Person"}
+                              </Badge>
                             </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
+
+                            {/* --- Card Body --- */}
+                            <div className="p-4">
+                              <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+                                {event.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                                {event.description}
+                              </p>
+
+                              {/* --- Date & Location --- */}
+                              <div className="space-y-2 mb-4">
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>
+                                    {formatDate(new Date(event.date))}
+                                    {event.start_time
+                                      ? ` at ${event.start_time}`
+                                      : " all day"}
+                                  </span>
+                                </div>
+                                {event.location_format === "in-person" && (
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>{event.location}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* --- Capacity Bar --- */}
+                              {event.capacity && (
+                                <div className="mb-4">
+                                  <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                                    <span>
+                                      {event._count.participants} attending
+                                    </span>
+                                    <span>
+                                      {event.capacity -
+                                        event._count.participants}{" "}
+                                      spots left
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                      className="bg-gradient-to-r from-celestial-blue to-picton-blue h-2 rounded-full transition-all"
+                                      style={{
+                                        width: `${
+                                          (event._count.participants /
+                                            event.capacity) *
+                                          100
+                                        }%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* --- Buttons --- */}
+                              <div className="flex gap-2">
+                                <Link href={`/dashboard/events/${event.id}`}>
+                                  <Button className="flex-1 bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                                    View Details
+                                  </Button>
+                                </Link>
+
+                                <Button
+                                  variant={isAttending ? "outline" : "default"}
+                                  disabled={isAttending}
+                                  onClick={() => handleJoinEvent(event.id)}
+                                  className={`flex-1 ${
+                                    isAttending
+                                      ? "border-green-500 text-green-600 hover:bg-green-50"
+                                      : "bg-green-500 hover:bg-green-600 text-white"
+                                  }`}
+                                >
+                                  {isAttending ? "Joined" : "Join Event"}
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-1 w-full flex-col items-center justify-center py-16 text-center text-gray-600">
+                      <Calendar className="w-10 h-10 mb-3 text-gray-400" />
+                      {canManageCommunity ? (
+                        <>
+                          <p className="text-lg font-medium mb-4">
+                            No events yet. Create the first one for your
+                            community!
+                          </p>
+                          <Link href={`${community.id}/events/create`}>
+                            <Button className="bg-gradient-to-r from-celestial-blue to-picton-blue hover:opacity-90">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              Create Event
+                            </Button>
+                          </Link>
+                        </>
+                      ) : (
+                        <p className="text-lg font-medium">
+                          There are no upcoming events in this community yet.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 

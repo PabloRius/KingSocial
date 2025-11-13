@@ -10,6 +10,7 @@ import {
   communityMessageSelect,
   communitySelect,
 } from "../models/Community";
+import { addEmbeddingToUser, generateCommunityEmbedding } from "../openai";
 
 export async function createCommunity(
   newCommunityData: CommunityCreatePayload,
@@ -45,7 +46,12 @@ export async function joinCommunity(communityId: string): Promise<boolean> {
 
     const community = await prisma.community.findUnique({
       where: { id: communityId },
-      select: { id: true, mode: true, members: { select: { userId: true } } },
+      select: {
+        id: true,
+        mode: true,
+        members: { select: { userId: true } },
+        embedding: true,
+      },
     });
 
     if (!community) throw new Error("Community not found");
@@ -64,6 +70,15 @@ export async function joinCommunity(communityId: string): Promise<boolean> {
         role: "member",
       },
     });
+
+    let communityEmbedding = community.embedding;
+    if (!communityEmbedding || !Array.isArray(communityEmbedding)) {
+      communityEmbedding = await generateCommunityEmbedding(communityId);
+    }
+
+    if (communityEmbedding && Array.isArray(communityEmbedding)) {
+      await addEmbeddingToUser(sessionUserId, communityEmbedding as number[]);
+    }
 
     return true;
   } catch (error) {
@@ -94,7 +109,7 @@ export async function sendJoinRequest(
 
     const community = await prisma.community.findUnique({
       where: { id: communityId },
-      select: { id: true, mode: true },
+      select: { id: true, mode: true, embedding: true },
     });
 
     if (!community) throw new Error("Community not found");
@@ -119,6 +134,15 @@ export async function sendJoinRequest(
         community: { connect: { id: communityId } },
       },
     });
+
+    let communityEmbedding = community.embedding;
+    if (!communityEmbedding || !Array.isArray(communityEmbedding)) {
+      communityEmbedding = await generateCommunityEmbedding(community.id);
+    }
+
+    if (communityEmbedding && Array.isArray(communityEmbedding)) {
+      await addEmbeddingToUser(sessionUserId, communityEmbedding as number[]);
+    }
 
     return true;
   } catch (error) {
