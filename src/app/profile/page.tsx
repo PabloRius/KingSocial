@@ -67,7 +67,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [formData, setFormData] = useState({
     name: session?.profile.name,
-    username: session?.profile.username,
     biography: session?.profile.biography,
     instagram: session?.profile.instagram,
     linkedin: session?.profile.linkedin,
@@ -92,7 +91,6 @@ export default function ProfilePage() {
       setFormData((prev) => ({
         ...prev,
         name: session.profile.name,
-        username: session.profile.username,
         email: session.profile.email,
         biography: session.profile.biography,
         instagram: session.profile.instagram,
@@ -129,10 +127,6 @@ export default function ProfilePage() {
       const data = new FormData();
       data.append("name", formData.name || session.profile.name || "");
       data.append(
-        "username",
-        formData.username || session.profile.username || ""
-      );
-      data.append(
         "biography",
         formData.biography || session.profile.biography || ""
       );
@@ -167,7 +161,6 @@ export default function ProfilePage() {
   const handleCancel = () => {
     setFormData({
       name: session?.profile.name,
-      username: session.profile.username,
       biography: session.profile.biography,
       instagram: session?.profile.instagram,
       linkedin: session?.profile.linkedin,
@@ -297,9 +290,6 @@ export default function ProfilePage() {
                 {/* Profile Info */}
                 <div className="flex-1 min-w-0 text-white drop-shadow-lg text-left">
                   <h1 className="text-3xl font-bold">{session.profile.name}</h1>
-                  <p className="text-gray-200 mb-2">
-                    @{session.profile.username}
-                  </p>
                   <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-200">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -352,7 +342,7 @@ export default function ProfilePage() {
             )}
             {!isEditing && (
               <Button variant="outline" asChild>
-                <Link href={`/profile/${session.profile.username}`}>
+                <Link href={`/profile/${session.profile.id}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   View Public Profile
                 </Link>
@@ -386,18 +376,6 @@ export default function ProfilePage() {
                       value={formData.name || ""}
                       onChange={(e) =>
                         handleInputChange("name", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      value={formData.username || ""}
-                      onChange={(e) =>
-                        handleInputChange("username", e.target.value)
                       }
                       disabled={!isEditing}
                       className="mt-1"

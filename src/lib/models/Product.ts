@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   id: true,
   name: true,
-  seller: { select: { user: true, rating: true } },
+  seller: { select: { user: true } },
   category: true,
   condition: true,
   description: true,

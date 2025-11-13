@@ -1,29 +1,3 @@
-import { Prisma } from "@prisma/client";
-
-export const sellerProfileSelect =
-  Prisma.validator<Prisma.SellerProfileSelect>()({
-    id: true,
-    products: true,
-    rating: true,
-    user: true,
-  });
-
-export type SellerProfile = Prisma.SellerProfileGetPayload<{
-  select: typeof sellerProfileSelect;
-}>;
-
-export const categories = [
-  "All Categories",
-  "Electronics",
-  "Books",
-  "Clothing",
-  "Home",
-  "Sports",
-  "Tickets",
-  "Other",
-] as const;
-export type Category = (typeof categories)[number];
-
 export const conditions = [
   "Any",
   "New",

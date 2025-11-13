@@ -440,9 +440,6 @@ export default function EventDetailPage({
                       <p className="text-sm font-semibold text-gray-900 truncate">
                         {attendee.user.name}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        @{attendee.user.username}
-                      </p>
                     </div>
                   </div>
                 ))}
@@ -619,9 +616,6 @@ export default function EventDetailPage({
                           {attendee.role !== "participant" &&
                             getRoleBadge(attendee.role)}
                         </div>
-                        <p className="text-sm text-gray-500">
-                          @{attendee.user.username}
-                        </p>
                       </div>
                     </div>
                     {canManageEvent &&

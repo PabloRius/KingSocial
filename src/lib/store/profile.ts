@@ -1,9 +1,14 @@
 "use server";
 
+import { signIn } from "@/auth";
 import { User, userSelect } from "@/lib/models/User";
 import prisma from "@/prisma";
 import { deleteFromCloudinary } from "../cloudinary_utils";
 import { removeListingById } from "./marketplace";
+
+export const login = async () => {
+  await signIn("google", { redirectTo: "/" });
+};
 
 export async function getProfileById(id: string): Promise<User | null> {
   try {

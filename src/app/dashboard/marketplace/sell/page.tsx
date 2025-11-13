@@ -21,8 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { categories } from "@/lib/models/Category";
+import { labelledConditions } from "@/lib/models/Condition";
 import { getListingById } from "@/lib/store/marketplace";
-import { categories, labelledConditions } from "@/types/types";
 import { Camera, Plus, PoundSterling, Tag, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";

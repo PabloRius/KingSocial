@@ -18,9 +18,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
 import { useDebounce } from "@/hooks/useDebounce";
+import { categories, Category } from "@/lib/models/Category";
+import { Condition } from "@/lib/models/Condition";
 import { Product } from "@/lib/models/Product";
 import { getMarketplace, toggleBookmarkListing } from "@/lib/store/marketplace";
-import { categories, Category, Condition } from "@/types/types";
 import { TabsContent } from "@radix-ui/react-tabs";
 import {
   Bookmark,
@@ -31,7 +32,6 @@ import {
   PoundSterling,
   Search,
   SlidersHorizontal,
-  Star,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -426,14 +426,6 @@ export default function MarketplacePage() {
                                   <span className="text-sm">
                                     {product.seller.user.name}
                                   </span>
-                                  {product.seller.rating && (
-                                    <div className="flex items-center ml-auto">
-                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                      <span className="text-xs ml-1">
-                                        {product.seller.rating}
-                                      </span>
-                                    </div>
-                                  )}
                                 </>
                               ) : (
                                 "Account Deleted"

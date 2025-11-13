@@ -1,7 +1,7 @@
 "use client";
 
-import { login } from "@/lib/actions/auth";
 import { User } from "@/lib/models/User";
+import { login } from "@/lib/store/profile";
 import { signOut } from "next-auth/react";
 import {
   createContext,

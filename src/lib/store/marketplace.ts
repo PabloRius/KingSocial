@@ -2,8 +2,9 @@
 
 import { auth } from "@/auth";
 import prisma from "@/prisma";
-import { Category, Condition } from "@/types/types";
 import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary_utils";
+import { Category } from "../models/Category";
+import { Condition } from "../models/Condition";
 import { Product, productSelect, UpdateProduct } from "../models/Product";
 import { getProfileById } from "./profile";
 

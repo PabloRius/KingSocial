@@ -25,7 +25,6 @@ export const JoinRequest = ({
     id: string;
     name: string | null;
     image: string | null;
-    username: string;
   };
   createdAt: Date;
   handleApproveJoinRequest: (requestId: string) => Promise<void>;
@@ -46,11 +45,10 @@ export const JoinRequest = ({
       <div className="flex items-center gap-3 mb-2">
         <UserAvatar
           avatarUrl={user.image || undefined}
-          name={user.name || user.username}
+          name={user.name || ""}
         />
         <div>
           <p className="font-semibold text-gray-900">{user.name}</p>
-          <p className="text-sm text-gray-500">@{user.username}</p>
         </div>
       </div>
 

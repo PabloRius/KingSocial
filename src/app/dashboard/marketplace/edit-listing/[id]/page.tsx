@@ -21,9 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { categories } from "@/lib/models/Category";
+import { labelledConditions } from "@/lib/models/Condition";
 import { UpdateProduct } from "@/lib/models/Product";
 import { getListingById, modifyListing } from "@/lib/store/marketplace";
-import { categories, labelledConditions } from "@/types/types";
 import {
   Camera,
   Loader2,

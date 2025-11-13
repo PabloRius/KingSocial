@@ -266,7 +266,6 @@ export default function CommunityDetailPage({
         sender: {
           role: memberRole || "member",
           user: {
-            username: session?.profile?.username || "You",
             name: session?.profile?.name || "",
             image: session?.profile?.image || "",
           },
@@ -596,7 +595,7 @@ export default function CommunityDetailPage({
                           sender,
                         } = msg;
                         const { role, user } = sender || {};
-                        const { image, name, username } = user || {};
+                        const { image, name } = user || {};
 
                         const isOwnMessage = senderId === memberId;
                         const messageColor = senderId
@@ -614,7 +613,7 @@ export default function CommunityDetailPage({
                             {!isOwnMessage && (
                               <UserAvatar
                                 avatarUrl={image || undefined}
-                                name={name || username}
+                                name={name || ""}
                                 className="flex-shrink-0"
                               />
                             )}
@@ -633,7 +632,7 @@ export default function CommunityDetailPage({
                                     className="font-semibold text-sm"
                                     style={{ color: messageColor }}
                                   >
-                                    {username}
+                                    {name}
                                   </span>
                                   {role !== "member" && getRoleBadge(role)}
                                   <span className="text-xs text-gray-400">
@@ -664,7 +663,7 @@ export default function CommunityDetailPage({
                             {isOwnMessage && (
                               <UserAvatar
                                 avatarUrl={image || undefined}
-                                name={name || username}
+                                name={name || ""}
                                 className="flex-shrink-0"
                               />
                             )}
@@ -884,14 +883,11 @@ export default function CommunityDetailPage({
                           <div className="flex items-center gap-3">
                             <UserAvatar
                               avatarUrl={user.image || undefined}
-                              name={user.name || user.username}
+                              name={user.name || ""}
                             />
                             <div>
                               <p className="font-semibold text-gray-900">
                                 {user.name}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                @{user.username}
                               </p>
                             </div>
                           </div>

@@ -1,6 +1,6 @@
 import { Product } from "@/lib/models/Product";
 import { motion } from "framer-motion";
-import { Bookmark, Star } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -94,12 +94,6 @@ export const MarketPlaceProductCard = ({
                 avatarUrl={item.seller.user.image || undefined}
               />
               <span className="text-sm">{item.seller.user.name}</span>
-              {item.seller.rating && (
-                <div className="flex items-center ml-auto">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs ml-1">{item.seller.rating}</span>
-                </div>
-              )}
             </>
           ) : (
             "Account Deleted"

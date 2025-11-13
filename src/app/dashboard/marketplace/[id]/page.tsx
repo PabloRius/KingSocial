@@ -27,7 +27,6 @@ import {
   MapPin,
   MessageCircle,
   Send,
-  Star,
   User,
 } from "lucide-react";
 import Image from "next/image";
@@ -394,30 +393,6 @@ export default function ProductPage({
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {product.seller.user.name}
-                      </div>
-                      <div className="flex items-center gap-1 mb-2">
-                        {product.seller.rating && (
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="ml-1 text-sm font-medium">
-                              {product.seller.rating}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        {/* <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{product.seller.responseTime}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        <span>{product.seller.totalSales} items sold</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>Joined {product.seller.joinDate}</span>
-                      </div> */}
                       </div>
                     </div>
                   </div>

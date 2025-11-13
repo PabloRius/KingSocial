@@ -10,7 +10,7 @@ export const communityMessageSelect =
     sender: {
       select: {
         role: true,
-        user: { select: { username: true, name: true, image: true } },
+        user: { select: { name: true, image: true } },
       },
     },
     senderId: true,
@@ -23,7 +23,7 @@ export const communityMemberSelect =
   Prisma.validator<Prisma.CommunityMemberSelect>()({
     id: true,
     role: true,
-    user: { select: { id: true, image: true, name: true, username: true } },
+    user: { select: { id: true, image: true, name: true } },
     community: { select: { id: true } },
     joinedAt: true,
     userId: true,
@@ -47,7 +47,7 @@ export const communitySelect = Prisma.validator<Prisma.CommunitySelect>()({
       id: true,
       message: true,
       createdAt: true,
-      user: { select: { id: true, image: true, name: true, username: true } },
+      user: { select: { id: true, image: true, name: true } },
     },
   },
 });
