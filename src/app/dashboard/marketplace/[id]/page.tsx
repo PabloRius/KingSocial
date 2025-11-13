@@ -428,7 +428,7 @@ export default function ProductPage({
                   <>
                     <Separator className="my-4" />
                     <Button variant="outline" className="w-full" asChild>
-                      <Link href={`/profile/${product.seller.user.username}`}>
+                      <Link href={`/profile/${product.seller.user.id}`}>
                         <User className="mr-2 h-4 w-4" />
                         View Seller Profile
                       </Link>
