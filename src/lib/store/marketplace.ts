@@ -5,7 +5,12 @@ import prisma from "@/prisma";
 import { deleteFromCloudinary, uploadToCloudinary } from "../cloudinary_utils";
 import { Category } from "../models/Category";
 import { Condition } from "../models/Condition";
-import { Product, productSelect, UpdateProduct } from "../models/Product";
+import {
+  Product,
+  ProductCreatePayload,
+  productSelect,
+  UpdateProduct,
+} from "../models/Product";
 import { getProfileById } from "./profile";
 
 export async function initSellerProfile(
@@ -41,6 +46,73 @@ export async function initSellerProfile(
     return false;
   }
 }
+
+export async function publishListing(
+  newListingData: ProductCreatePayload,
+  files: Array<File>
+): Promise<Product | null> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized");
+    }
+    const { id } = session.user;
+
+    const profile = await getProfileById(id);
+
+    if (!profile) {
+      throw new Error("Unauthorized");
+    }
+
+    const { sellerProfile } = profile;
+
+    if (!sellerProfile) {
+      throw new Error("Unauthorized");
+    }
+
+    const { id: sellerId } = sellerProfile;
+
+    const {
+      name,
+      description,
+      price,
+      category,
+      condition,
+      pickupLocation,
+      tags,
+    } = newListingData;
+
+    const imageUrls = await Promise.all(
+      files.map((file) => uploadToCloudinary(file, "marketplace"))
+    );
+
+    if (imageUrls.length === 0) {
+      console.error("At least one image is required");
+      throw new Error("At least one image is required");
+    }
+
+    const newProduct = await prisma.product.create({
+      data: {
+        name,
+        description,
+        price,
+        category,
+        condition,
+        pickupLocation,
+        tags,
+        photos: imageUrls,
+        seller: { connect: { id: sellerId } },
+      },
+      select: productSelect,
+    });
+
+    return newProduct;
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return null;
+  }
+}
+
 export async function getMarketplace(
   page: number,
   limit: number,

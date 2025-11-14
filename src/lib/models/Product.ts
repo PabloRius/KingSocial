@@ -1,4 +1,6 @@
 import { Prisma } from "@prisma/client";
+import { Category } from "./Category";
+import { Condition } from "./Condition";
 
 export const productSelect = Prisma.validator<Prisma.ProductSelect>()({
   id: true,
@@ -33,3 +35,14 @@ export interface UpdateProduct {
   tags?: string[];
   photos?: string[];
 }
+
+export type ProductCreatePayload = {
+  name: string;
+  category: Category;
+  condition: Condition;
+  description: string;
+  price: number;
+  tags: Array<string>;
+  pickupLocation: string;
+  photos: File[];
+};

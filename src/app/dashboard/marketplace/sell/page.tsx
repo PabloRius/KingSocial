@@ -21,25 +21,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { categories } from "@/lib/models/Category";
-import { labelledConditions } from "@/lib/models/Condition";
-import { getListingById } from "@/lib/store/marketplace";
+import { categories, Category } from "@/lib/models/Category";
+import { Condition, labelledConditions } from "@/lib/models/Condition";
+import { ProductCreatePayload } from "@/lib/models/Product";
+import { getListingById, publishListing } from "@/lib/store/marketplace";
 import { Camera, Plus, PoundSterling, Tag, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function SellPage() {
-  const [formData, setFormData] = useState({
-    title: "",
+  const [formData, setFormData] = useState<ProductCreatePayload>({
+    name: "",
     description: "",
     price: 0,
-    category: "",
-    condition: "",
-    location: "",
+    category: "All Categories",
+    condition: "Any",
+    pickupLocation: "",
     tags: [] as string[],
+    photos: [],
   });
   const [images, setImages] = useState<{ src: string; isNew: boolean }[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -58,13 +61,14 @@ export default function SellPage() {
         if (!product) throw new Error("Failed to fetch product data");
 
         setFormData({
-          title: product.name,
+          name: product.name,
           description: product.description,
           price: product.price,
-          category: product.category,
-          condition: product.condition,
-          location: product.pickupLocation,
+          category: product.category as Category,
+          condition: product.condition as Condition,
+          pickupLocation: product.pickupLocation,
           tags: product.tags,
+          photos: [],
         });
 
         if (product.photos && product.photos.length > 0) {
@@ -143,15 +147,6 @@ export default function SellPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const data = new FormData();
-    data.append("title", formData.title);
-    data.append("description", formData.description);
-    data.append("price", formData.price.toString());
-    data.append("category", formData.category);
-    data.append("condition", formData.condition);
-    data.append("location", formData.location);
-    formData.tags.forEach((tag) => data.append("tags", tag));
-
     try {
       const existingUrlFiles = await Promise.all(
         images
@@ -174,19 +169,12 @@ export default function SellPage() {
         return;
       }
 
-      allFiles.forEach((file) => data.append("images", file));
-      const res = await fetch("/api/sell", {
-        method: "POST",
-        body: data,
-      });
+      const res = await publishListing(formData, allFiles);
 
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Error: ${error.message}`);
-        return;
+      if (res) {
+        redirect("/dashboard/marketplace/your-listings");
       }
-
-      window.location.href = "/dashboard/marketplace/your-listings";
+      toast.error("Error uploading the listing");
     } catch {
       alert("Something went wrong.");
     } finally {
@@ -196,12 +184,12 @@ export default function SellPage() {
 
   const isFormValid = () => {
     return (
-      formData.title.trim() &&
+      formData.name.trim() &&
       formData.description.trim() &&
       formData.price &&
       formData.category &&
       formData.condition &&
-      formData.location &&
+      formData.pickupLocation &&
       images.length > 0
     );
   };
@@ -286,12 +274,12 @@ export default function SellPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Title *</Label>
+                  <Label htmlFor="name">Name *</Label>
                   <Input
-                    id="title"
+                    id="name"
                     placeholder="e.g., MacBook Pro 2021, Physics Textbook, Desk Lamp..."
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className="mt-1"
                   />
                 </div>
@@ -350,13 +338,13 @@ export default function SellPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="location">Pickup Location *</Label>
+                    <Label htmlFor="pickupLocation">Pickup Location *</Label>
                     <Input
-                      id="title"
+                      id="pickupLocation"
                       placeholder="e.g., City Hall, Penrhyn Road Campus, Central London, etc"
-                      value={formData.location}
+                      value={formData.pickupLocation}
                       onChange={(e) =>
-                        handleInputChange("location", e.target.value)
+                        handleInputChange("pickupLocation", e.target.value)
                       }
                       className="mt-1"
                     />
