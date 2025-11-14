@@ -8,6 +8,39 @@ import { Condition } from "../models/Condition";
 import { Product, productSelect, UpdateProduct } from "../models/Product";
 import { getProfileById } from "./profile";
 
+export async function initSellerProfile(
+  userId: string,
+  plan: string
+): Promise<boolean> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized");
+    }
+    if (session.user.id !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    const profile = await getProfileById(userId);
+
+    if (!profile) {
+      throw new Error("User not found");
+    }
+
+    const { id } = profile;
+
+    await prisma.sellerProfile.create({
+      data: {
+        user: { connect: { id } },
+        plan: plan || "basic",
+      },
+    });
+    return true;
+  } catch (error) {
+    console.error(`An error occurred while creating seller profile: ${error}`);
+    return false;
+  }
+}
 export async function getMarketplace(
   page: number,
   limit: number,

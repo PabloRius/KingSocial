@@ -11,40 +11,47 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSession } from "@/context/session-context";
+import { initSellerProfile } from "@/lib/store/marketplace";
 import { plans, testimonials } from "@/static/data";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
   Badge,
   Check,
+  Loader2,
   Shield,
   ShoppingBag,
   Star,
   TrendingUp,
   Users,
 } from "lucide-react";
+import { redirect } from "next/navigation";
 import { toast } from "sonner";
 // import Link from "next/link";
 
 export default function SelectPlanPage() {
   const {
     handlers: { reload },
+    session,
+    loading,
   } = useSession();
+  if (loading) {
+    return (
+      <div className="flex-1 w-full h-full items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+  if (!session?.profile.id) redirect("/");
+
   const activateMarketplacePlan = async (plan: string) => {
     try {
-      const response = await fetch("/api/seller", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan }),
-      });
+      const response = await initSellerProfile(session.profile.id, plan);
 
-      if (response.ok) {
+      if (response) {
         toast("Seller profile created successfully!");
         reload();
       } else {
-        const data = await response.json();
-        toast.error(`Error: ${data.message || "Failed to activate plan"}`);
+        toast.error("Failed to activate plan");
       }
     } catch (error) {
       console.error(error);
