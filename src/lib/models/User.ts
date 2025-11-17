@@ -20,3 +20,10 @@ export const userSelect = Prisma.validator<Prisma.UserSelect>()({
 });
 
 export type User = Prisma.UserGetPayload<{ select: typeof userSelect }>;
+
+export type UserUpdatePayload = {
+  name?: string;
+  biography?: string;
+  instagram?: string;
+  linkedin?: string;
+};

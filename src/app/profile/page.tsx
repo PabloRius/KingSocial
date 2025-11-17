@@ -15,7 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useSession } from "@/context/session-context";
-import { deleteProfileById } from "@/lib/store/profile";
+import { UserUpdatePayload } from "@/lib/models/User";
+import { deleteProfileById, updateProfile } from "@/lib/store/profile";
 import {
   ArrowRight,
   Camera,
@@ -65,11 +66,11 @@ export default function ProfilePage() {
   } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-  const [formData, setFormData] = useState({
-    name: session?.profile.name,
-    biography: session?.profile.biography,
-    instagram: session?.profile.instagram,
-    linkedin: session?.profile.linkedin,
+  const [formData, setFormData] = useState<UserUpdatePayload>({
+    name: undefined,
+    biography: undefined,
+    instagram: undefined,
+    linkedin: undefined,
   });
   const [imagesData, setImagesData] = useState<{
     image: string | undefined;
@@ -90,13 +91,13 @@ export default function ProfilePage() {
     if (session) {
       setFormData((prev) => ({
         ...prev,
-        name: session.profile.name,
-        email: session.profile.email,
-        biography: session.profile.biography,
-        instagram: session.profile.instagram,
-        linkedin: session.profile.linkedin,
-        image: session.profile.image,
-        coverImage: session.profile.coverImage,
+        name: session.profile.name || undefined,
+        email: session.profile.email || undefined,
+        biography: session.profile.biography || undefined,
+        instagram: session.profile.instagram || undefined,
+        linkedin: session.profile.linkedin || undefined,
+        image: session.profile.image || undefined,
+        coverImage: session.profile.coverImage || undefined,
       }));
       setImagesData({
         image: session.profile.image || undefined,
@@ -124,28 +125,14 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      const data = new FormData();
-      data.append("name", formData.name || session.profile.name || "");
-      data.append(
-        "biography",
-        formData.biography || session.profile.biography || ""
+      const res = await updateProfile(
+        session.profile.id,
+        formData,
+        imagesData.imageFile || undefined,
+        imagesData.coverImageFile || undefined
       );
-      data.append(
-        "instagram",
-        formData.instagram || session.profile.instagram || ""
-      );
-      data.append(
-        "linkedin",
-        formData.linkedin || session.profile.linkedin || ""
-      );
-      data.append("image", imagesData.imageFile || "");
-      data.append("coverImage", imagesData.coverImageFile || "");
-      const res = await fetch("/api/profile", {
-        method: "PUT",
-        body: data,
-      });
 
-      if (!res.ok) {
+      if (!res) {
         throw new Error("Failed to save profile");
       }
 
@@ -160,10 +147,10 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setFormData({
-      name: session?.profile.name,
-      biography: session.profile.biography,
-      instagram: session?.profile.instagram,
-      linkedin: session?.profile.linkedin,
+      name: session.profile.name || undefined,
+      biography: session.profile.biography || undefined,
+      instagram: session.profile.instagram || undefined,
+      linkedin: session.profile.linkedin || undefined,
     });
     setImagesData({
       image: session.profile.image || undefined,

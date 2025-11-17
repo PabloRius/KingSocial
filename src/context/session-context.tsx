@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "@/lib/models/User";
-import { login } from "@/lib/store/profile";
+import { getSession, login } from "@/lib/store/profile";
 import { signOut } from "next-auth/react";
 import {
   createContext,
@@ -43,15 +43,13 @@ export const SessionProvider = ({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/session");
+      const res = await getSession();
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to fetch session");
+      if (!res) {
+        throw new Error("No session found");
       }
-      const data = await res.json();
-      console.log(data);
-      setSession(data);
+
+      setSession({ profile: res });
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
